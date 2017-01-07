@@ -45,42 +45,42 @@ public class SensorGraphView extends View {
         super(context, attrs);
 
         Resources res = context.getResources();
-
+        //Änderung: Auskommentierung der Graphfarben. Vermutlich nicht benötigt
         rectPaints[0] = new Paint();
-        rectPaints[0].setColor(res.getColor(R.color.graph_color_1));
+        //rectPaints[0].setColor(res.getColor(R.color.graph_color_1));
 
         rectPaints[1] = new Paint();
-        rectPaints[1].setColor(res.getColor(R.color.graph_color_2));
+        //rectPaints[1].setColor(res.getColor(R.color.graph_color_2));
 
         rectPaints[2] = new Paint();
-        rectPaints[2].setColor(res.getColor(R.color.graph_color_3));
+        //rectPaints[2].setColor(res.getColor(R.color.graph_color_3));
 
         rectPaints[3] = new Paint();
-        rectPaints[3].setColor(res.getColor(R.color.graph_color_4));
+        //rectPaints[3].setColor(res.getColor(R.color.graph_color_4));
 
         rectPaints[4] = new Paint();
-        rectPaints[4].setColor(res.getColor(R.color.graph_color_5));
+        //rectPaints[4].setColor(res.getColor(R.color.graph_color_5));
 
         rectPaints[5] = new Paint();
-        rectPaints[5].setColor(res.getColor(R.color.graph_color_6));
+        //rectPaints[5].setColor(res.getColor(R.color.graph_color_6));
 
         rectPaints[6] = new Paint();
-        rectPaints[6].setColor(res.getColor(R.color.graph_color_7));
+        //rectPaints[6].setColor(res.getColor(R.color.graph_color_7));
 
         rectPaints[7] = new Paint();
-        rectPaints[7].setColor(res.getColor(R.color.graph_color_8));
+        //rectPaints[7].setColor(res.getColor(R.color.graph_color_8));
 
         rectPaints[8] = new Paint();
-        rectPaints[8].setColor(res.getColor(R.color.graph_color_9));
+        //rectPaints[8].setColor(res.getColor(R.color.graph_color_9));
 
 
         infoPaint = new Paint();
-        infoPaint.setColor(res.getColor(R.color.graph_color_info));
+        //infoPaint.setColor(res.getColor(R.color.graph_color_info));
         infoPaint.setTextSize(48f);
         infoPaint.setAntiAlias(true);
 
         tagPaint = new Paint();
-        tagPaint.setColor(res.getColor(R.color.graph_color_info));
+        //tagPaint.setColor(res.getColor(R.color.graph_color_info));
         tagPaint.setAntiAlias(true);
 
     }

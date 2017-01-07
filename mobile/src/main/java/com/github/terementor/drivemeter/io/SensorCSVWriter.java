@@ -59,18 +59,12 @@ public class SensorCSVWriter {
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Accelerometer (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Rotation (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Magnetic (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
-            //mydatabase.execSQL("INSERT INTO Gyroskop VALUES('test1','test2','test3','test4');");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearGyroskop (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearAccelerometer (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearRotation (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearMagnetic (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
 
-            ContentValues daten = new ContentValues();
-            daten.put("time", "schmidt");
-            daten.put("x", "6146");
-            daten.put("y", "senf");
-            daten.put("z","maus");
-
-            mydatabase.insert("Gyroskop", null, daten);
             //mydatabase.close();
-
-
         }
         catch (Exception e) {
             Log.e(TAG, "LogCSVWriter constructor failed");

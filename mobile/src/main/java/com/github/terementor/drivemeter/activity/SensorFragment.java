@@ -87,8 +87,9 @@ public class SensorFragment extends Fragment {
 
         sensor = RemoteSensorManager.getInstance(getActivity()).getSensor(sensorId);
 
-
-        final View view = inflater.inflate(R.layout.fragment_sensor, container, false);
+        //Anpassung
+        final View view = null;
+        /*final View view = inflater.inflate(R.layout.fragment_sensor, container, false);
 
 
         ((TextView) view.findViewById(R.id.title)).setText(sensor.getName());
@@ -126,7 +127,7 @@ public class SensorFragment extends Fragment {
         }
 
         sensorview.setDrawSensors(drawSensors);
-
+        */
         return view;
     }
 

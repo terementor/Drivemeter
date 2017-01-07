@@ -46,6 +46,7 @@ import com.github.pires.obd.commands.engine.RuntimeCommand;
 import com.github.pires.obd.enums.AvailableCommandNames;
 import com.github.terementor.drivemeter.R;
 import com.github.terementor.drivemeter.config.ObdConfig;
+import com.github.terementor.drivemeter.data.DataDeques;
 import com.github.terementor.drivemeter.io.AbstractGatewayService;
 import com.github.terementor.drivemeter.io.LogCSVWriter;
 import com.github.terementor.drivemeter.io.MockObdGatewayService;
@@ -57,7 +58,9 @@ import com.github.terementor.drivemeter.net.ObdReading;
 import com.github.terementor.drivemeter.net.ObdService;
 import com.github.terementor.drivemeter.trips.TripLog;
 import com.github.terementor.drivemeter.trips.TripRecord;
+import com.google.android.gms.wearable.DataEvent;
 import com.google.inject.Inject;
+import com.github.terementor.drivemeter.activity.SensorReceiverService;
 
 //Wear inports
 //import com.github.terementor.drivemeter.data.Sensor;
@@ -153,6 +156,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     //private SQLiteDatabase mydatabase;
 
 
+    //WearCode
+    private RemoteSensorManager remoteSensorManager;
+
     /*public  boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -171,7 +177,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             return true;
         }
     }*/
-
 
 
     //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -200,7 +205,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             updateTextView(compass, dir);
 
             if (outputsensors) {
-                d.addLast(event);
+                //d.addLast(event);
                 float a = event.values[0];
                 float b = event.values[1];
                 float c = event.values[2];
@@ -210,7 +215,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 daten.put("time", y);
                 daten.put("x", a);
                 daten.put("y", b);
-                daten.put("z",c);
+                daten.put("z", c);
 
                 gyrodeque.addLast(daten);
             }
@@ -344,7 +349,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     Map<String, String> temp = new HashMap<String, String>();
                     temp.putAll(commandResult);
                     ObdReading reading = new ObdReading(lat, lon, alt, System.currentTimeMillis(), vin, temp);
-                    if(reading != null) myCSVWriter.writeLineCSV(reading);
+                    if (reading != null) myCSVWriter.writeLineCSV(reading);
                 }
                 commandResult.clear();
             }
@@ -424,7 +429,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             cmdResult = getString(R.string.status_obd_no_support);
         } else {
             cmdResult = job.getCommand().getFormattedResult();
-            if(isServiceBound)
+            if (isServiceBound)
                 obdStatusTextView.setText(getString(R.string.status_obd_data));
         }
 
@@ -480,6 +485,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             bluetoothDefaultIsEnable = btAdapter.isEnabled();
 
 
+        //WearCode
+        remoteSensorManager = RemoteSensorManager.getInstance(this);
 
         // get Acceleration sensor
         List<Sensor> accsensors = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
@@ -511,8 +518,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         // create a log instance for use by this application
         triplog = TripLog.getInstance(this.getApplicationContext());
-        
+
         obdStatusTextView.setText(getString(R.string.status_obd_disconnected));
+
+        //SensorReceiverService sss = ((SensorReceiverService) this.back("com.github.terementor.drivemeter.activity.SensorReceiverService"));
+        //sss.toString();
     }
 
     @Override
@@ -545,6 +555,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     @Override
     protected void onPause() {
         super.onPause();
+
+        //WearCode
+        BusProvider.getInstance().unregister(this);
+
+        remoteSensorManager.stopMeasurement();
+
         Log.d(TAG, "Pausing..");
         releaseWakeLockIfHeld();
     }
@@ -574,8 +590,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         //WearCode
         BusProvider.getInstance().register(this);
-        List<com.github.terementor.drivemeter.data.Sensor> sensors = RemoteSensorManager.getInstance(this).getSensors();
+        List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
         Log.d(TAG, "Wear" + "");
+        //remoteSensorManager.startMeasurement();
+
 
         // get Bluetooth device
         final BluetoothAdapter btAdapter = BluetoothAdapter
@@ -681,13 +699,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     }
 
 
-    private void startsensors(){
+    private void startsensors() {
         outputsensors = true;
-
-        //AccessDB mydatabase;
+        remoteSensorManager.startMeasurement();
 
         if (prefs.getBoolean(ConfigActivity.ENABLE_FULL_LOGGING_KEY, false)) {
-        //// TODO: 30.12.2016 Wenn in den Einstellungen nicht "logging" aktiviert ist, stürzt die app ab. Das muss besser programmiert werden
+            //// TODO: 30.12.2016 Wenn in den Einstellungen nicht "logging" aktiviert ist, stürzt die app ab. Das muss besser programmiert werden
 
 
             // Create the CSV Logger
@@ -716,31 +733,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         }
         Log.d(TAG, "Starting sensors..");
 
-        /*Handler handler = new Handler();
-
-        final Runnable r = new Runnable() {
+        Runnable runnable = new Runnable() {
             public void run() {
-                String di = d.pollLast();
-                updateTextView(compass, di);
-
-            }
-        };
-        handler.postDelayed(r, 10);
-        r.run();*/
-
-        /*Thread background = new Thread(new Runnable() {
-            )
-            public void run() {
-                String di = d.pollLast();
-                updateTextView(compass, di);
-            }
-
-        });*/
-
-        Runnable runnable = new Runnable(){
-            public void run() {
-
-
 
                 /*TODO get sensor meta data for later CSV
                 name = sensor.getName();
@@ -753,8 +747,20 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 String oname = orientSensor.getName();
                 Log.d(TAG, "di#" + oname);*/
 
-                while (outputsensors){
-                    //di = d.pollFirst();
+                DataDeques dataDeques = DataDeques.getInstance();
+                //Clear deques to be sure, no data is left in it
+                dataDeques.clearWearaccdeque();
+                dataDeques.clearWeargyrodeque();
+                dataDeques.clearWearmagdeque();
+                dataDeques.clearWearrotdeque();
+                gyrodeque.clear();
+                accdeque.clear();
+                magdeque.clear();
+                rotdeque.clear();
+
+                //Write Sensordata in Database
+                while (outputsensors) {
+                    //Smartphonesensors
                     ContentValues gyrodata = gyrodeque.pollFirst();
                     if (gyrodata != null) {
                         SensorCSVWriter.mydatabase.insert("Gyroskop", null, gyrodata);
@@ -771,11 +777,29 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     if (magdata != null) {
                         SensorCSVWriter.mydatabase.insert("Magnetic", null, magdata);
                     }
+                    //Wearsensors
+                    ContentValues weargyrodata = dataDeques.pollfromWeargyrodeque();
+                    if (weargyrodata != null) {
+                        SensorCSVWriter.mydatabase.insert("WearGyroskop", null, weargyrodata);
+                    }
+                    ContentValues wearaccdata = dataDeques.pollfromWearaccdeque();
+                    if (wearaccdata != null) {
+                        SensorCSVWriter.mydatabase.insert("WearAccelerometer", null, wearaccdata);
+                    }
+                    ContentValues wearrotdata = dataDeques.pollfromWearrotdeque();
+                    if (wearrotdata != null) {
+                        SensorCSVWriter.mydatabase.insert("WearRotation", null, wearrotdata);
+                    }
+                    ContentValues wearmagdata = dataDeques.pollfromWearmagdeque();
+                    if (wearmagdata != null) {
+                        Log.d(TAG, "wearmagdata" + wearmagdata.toString());
+                        SensorCSVWriter.mydatabase.insert("WearMagnetic", null, wearmagdata);
+                    }
 
 
+                    //Write Sensordetails to CSV
                     if (outputsensordetails) {
-
-                        String [] details = new String[6];
+                        String[] details = new String[6];
                         details[0] = gyroSensor.getName();
                         details[1] = gyroSensor.getVendor();
                         details[2] = Integer.toString(gyroSensor.getType());
@@ -784,8 +808,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                         details[5] = Integer.toString(gyroSensor.getMaxDelay());
                         mySensorCSVWriter.writeLineSensorCSV(details); //write headerline
                         mySensorCSVWriter.writeLineSensorCSV(details);
-
-
 
 
                         details[0] = accSensor.getName();
@@ -821,8 +843,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             }
 
 
-
-            private void threadMsg(SensorEvent msg){
+            private void threadMsg(SensorEvent msg) {
                 Message msgObj = handler.obtainMessage();
             }
 
@@ -841,7 +862,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
     }
 
-    private void stopsensors(){
+    private void stopsensors() {
         outputsensors = false;
         if (mySensorCSVWriter != null) {
             mySensorCSVWriter.closeSensorCSVWriter();

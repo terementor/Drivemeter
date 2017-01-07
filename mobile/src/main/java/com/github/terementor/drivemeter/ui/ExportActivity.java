@@ -39,7 +39,8 @@ public class ExportActivity extends AppCompatActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_export);
+        //Änderung Code: Auch die Export View wird eigentlich nciht benötigt
+        /*setContentView(R.layout.activity_export);
 
         dataProgressbar = (ProgressBar) findViewById(R.id.export_progress);
         tagProgressbar = (ProgressBar) findViewById(R.id.export_progress_tag);
@@ -104,7 +105,7 @@ public class ExportActivity extends AppCompatActivity {
 
                     }
                 }
-        );
+        );*/
     }
 
     @Override
