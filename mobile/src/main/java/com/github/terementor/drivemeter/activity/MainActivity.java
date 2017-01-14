@@ -639,6 +639,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 return true;
             case STOP_SENSORS:
                 stopsensors();
+                remoteSensorManager.stopMeasurement();
                 return true;
             case STOP_LIVE_DATA:
                 stopLiveData();
@@ -748,7 +749,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 Log.d(TAG, "di#" + oname);*/
 
                 DataDeques dataDeques = DataDeques.getInstance();
-                //Clear deques to be sure, no data is left in it
                 dataDeques.clearWearaccdeque();
                 dataDeques.clearWeargyrodeque();
                 dataDeques.clearWearmagdeque();

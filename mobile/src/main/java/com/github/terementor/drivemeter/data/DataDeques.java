@@ -7,7 +7,8 @@ import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class DataDeques {
-
+    private static int m = 0;
+    private static final String TAG = "SensorDashboardDataDeques";
     private Deque<ContentValues> weargyrodeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> wearaccdeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> wearrotdeque = new ConcurrentLinkedDeque<ContentValues>();
@@ -34,7 +35,8 @@ public class DataDeques {
     }
 
     public void addtoWearaccdeque(ContentValues content) {
-        Log.d("DataDeques", content.toString());
+        //Log.d("DataDeques ",Integer.toString(m) + content.toString());
+        //m++;
         this.wearaccdeque.addLast(content);
     }
 

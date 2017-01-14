@@ -10,6 +10,8 @@ import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.github.terementor.drivemeter.shared.DataMapKeys;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,7 @@ public class SensorService extends Service implements SensorEventListener {
     private final static int SENS_STEP_COUNTER = Sensor.TYPE_STEP_COUNTER; //19
     private final static int SENS_GEOMAGNETIC = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR; //20
     private final static int SENS_HEARTRATE = Sensor.TYPE_HEART_RATE; //21
+
 
     SensorManager mSensorManager;
 
@@ -119,7 +122,7 @@ public class SensorService extends Service implements SensorEventListener {
         // Register the listener
         if (mSensorManager != null) {
             if (accelerometerSensor != null) {
-                mSensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, accelerometerSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
             } else {
                 Log.w(TAG, "No Accelerometer found");
             }
@@ -143,14 +146,13 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (gravitySensor != null) {
-                mSensorManager.registerListener(this, gravitySensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, gravitySensor, SensorManager.SENSOR_DELAY_NORMAL);
             } else {
                 Log.w(TAG, "No Gravity Sensor");
             }
 
             if (gyroscopeSensor != null) {
-                mSensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
-            } else {
+                mSensorManager.registerListener(this, gyroscopeSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
                 Log.w(TAG, "No Gyroscope Sensor found");
             }
 
@@ -188,7 +190,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (heartrateSamsungSensor != null) {
-                mSensorManager.registerListener(this, heartrateSamsungSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, heartrateSamsungSensor, SensorManager.SENSOR_DELAY_NORMAL);
             } else {
                 Log.d(TAG, "Samsungs Heartrate Sensor not found");
             }
@@ -200,13 +202,13 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (linearAccelerationSensor != null) {
-                mSensorManager.registerListener(this, linearAccelerationSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, linearAccelerationSensor, SensorManager.SENSOR_DELAY_NORMAL);
             } else {
                 Log.d(TAG, "No Linear Acceleration Sensor found");
             }
 
             if (magneticFieldSensor != null) {
-                mSensorManager.registerListener(this, magneticFieldSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, magneticFieldSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
             } else {
                 Log.d(TAG, "No Magnetic Field Sensor found");
             }
@@ -236,13 +238,13 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (rotationVectorSensor != null) {
-                mSensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
             } else {
                 Log.d(TAG, "No Rotation Vector Sensor found");
             }
 
             if (significantMotionSensor != null) {
-                mSensorManager.registerListener(this, significantMotionSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                mSensorManager.registerListener(this, significantMotionSensor, SensorManager.SENSOR_DELAY_NORMAL);
             } else {
                 Log.d(TAG, "No Significant Motion Sensor found");
             }
@@ -272,7 +274,12 @@ public class SensorService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        client.sendSensorData(event.sensor.getType(), event.accuracy, event.timestamp, event.values, event.sensor.getMaxDelay(), event.sensor.getName());
+        //client.sendSensorData(event.sensor.getType(), event.accuracy, event.timestamp, event.values, event.sensor.getMinDelay(), event.sensor.getName());
+        if (event.sensor.getType() == 1 || event.sensor.getType() == 2 || event.sensor.getType() == 4) {
+        //if (event.sensor.getType() == 1 ) {
+            client.sendSensorData(event);
+            Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
+        }
     }
 
 
