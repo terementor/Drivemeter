@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream;
  * Secondarily, it will serve as a repository of ObdCommandJobs and at the same
  * time the application state-machine.
  */
-public class MockSensorGatewayService extends AbstractGatewaySensorService {
+/*public class MockSensorGatewayService extends AbstractGatewaySensorService {
 
     private static final String TAG = MockSensorGatewayService.class.getName();
 
@@ -30,9 +30,9 @@ public class MockSensorGatewayService extends AbstractGatewaySensorService {
     }
 
 
-    /**
-     * Runs the queue until the service is stopped
-     */
+
+     //Runs the queue until the service is stopped
+
     protected void executeQueue() {
         Log.d(TAG, "Executing queue..");
         while (!Thread.currentThread().isInterrupted()) {
@@ -76,9 +76,9 @@ public class MockSensorGatewayService extends AbstractGatewaySensorService {
     }
 
 
-    /**
-     * Stop OBD connection and queue processing.
-     */
+
+     //Stop OBD connection and queue processing.
+
     public void stopService() {
         Log.d(TAG, "Stopping service..");
 
@@ -90,4 +90,4 @@ public class MockSensorGatewayService extends AbstractGatewaySensorService {
         stopSelf();
     }
 
-}
+}*/

@@ -1,18 +1,26 @@
 package com.github.terementor.drivemeter.data;
 
 import android.content.ContentValues;
-import android.util.Log;
 
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class DataDeques {
-    private static int m = 0;
     private static final String TAG = "SensorDashboardDataDeques";
+    private static final DataDeques INSTANCE = new DataDeques();
+    private static int m = 0;
     private Deque<ContentValues> weargyrodeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> wearaccdeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> wearrotdeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> wearmagdeque = new ConcurrentLinkedDeque<ContentValues>();
+
+    //Singleton
+    private DataDeques() {
+    }
+
+    public static DataDeques getInstance() {
+        return INSTANCE;
+    }
 
     public ContentValues pollfromWeargyrodeque() {
         return this.weargyrodeque.pollFirst();
@@ -64,14 +72,19 @@ public class DataDeques {
         this.weargyrodeque.clear();
     }
 
-
-    //Singleton
-    private DataDeques() {
+    public Boolean WearmagdequeisEmpty() {
+        return this.wearmagdeque.isEmpty();
     }
 
-    private static final DataDeques INSTANCE = new DataDeques();
+    public Boolean WearaccdequeisEmpty() {
+        return this.wearaccdeque.isEmpty();
+    }
 
-    public static DataDeques getInstance() {
-        return INSTANCE;
+    public Boolean WearrotdequeisEmpty() {
+        return this.wearrotdeque.isEmpty();
+    }
+
+    public Boolean WeargyrodequeisEmpty() {
+        return this.weargyrodeque.isEmpty();
     }
 }

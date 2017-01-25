@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.github.terementor.drivemeter.shared.DataMapKeys;
 
+import java.sql.Time;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +42,9 @@ public class SensorService extends Service implements SensorEventListener {
     private final static int SENS_STEP_COUNTER = Sensor.TYPE_STEP_COUNTER; //19
     private final static int SENS_GEOMAGNETIC = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR; //20
     private final static int SENS_HEARTRATE = Sensor.TYPE_HEART_RATE; //21
+
+    private static boolean istimesend = true;
+    private static boolean sendingstatus = false;
 
 
     SensorManager mSensorManager;
@@ -122,6 +126,8 @@ public class SensorService extends Service implements SensorEventListener {
         // Register the listener
         if (mSensorManager != null) {
             if (accelerometerSensor != null) {
+                //The default data delay is suitable for monitoring typical screen orientation changes and uses a delay of 200,000 microseconds.
+                // You can specify other data delays, such as SENSOR_DELAY_GAME (20,000 microsecond delay), SENSOR_DELAY_UI (60,000 microsecond delay), or SENSOR_DELAY_FASTEST (0 microsecond delay)
                 mSensorManager.registerListener(this, accelerometerSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
             } else {
                 Log.w(TAG, "No Accelerometer found");
@@ -261,9 +267,26 @@ public class SensorService extends Service implements SensorEventListener {
                 Log.d(TAG, "No Step Detector Sensor found");
             }
         }
+        //Wait with sending data to phone, to have enough time to initialize the phone
+
+        ScheduledExecutorService pool = Executors.newScheduledThreadPool(2);
+        pool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                client.sendreadyflag(); //Start recording of Phone sensors
+            }
+        }, 3000000, TimeUnit.MICROSECONDS );
+
+        pool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                SensorService.startsending(); //Start recording of Wear sensors
+            }
+        }, 3230000, TimeUnit.MICROSECONDS );
+        pool.shutdown();
     }
 
-    private void stopMeasurement() {
+    public void stopMeasurement() {
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(this);
         }
@@ -272,13 +295,36 @@ public class SensorService extends Service implements SensorEventListener {
         }
     }
 
+    /*public static void setdelay (){
+        istimesend = false;
+        Log.d(TAG, "issetffalse");
+    }*/
+
+    public static void startsending(){
+        sendingstatus = true;
+        Log.d(TAG, "startsending()");
+    }
+    public static void stopsending(){
+        sendingstatus = false;
+        Log.d(TAG, "delaytrue cause of stop message");
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
+        //only startsending, when everything is initalized and message with startsending was send to phone
+        if (!sendingstatus){
+            Log.d(TAG, "isfalse");
+            return;
+        }
+
         //client.sendSensorData(event.sensor.getType(), event.accuracy, event.timestamp, event.values, event.sensor.getMinDelay(), event.sensor.getName());
         if (event.sensor.getType() == 1 || event.sensor.getType() == 2 || event.sensor.getType() == 4) {
         //if (event.sensor.getType() == 1 ) {
             client.sendSensorData(event);
-            Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
+            if (event.sensor.getType() == 1 ) {
+                Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
+            }
+            //Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
         }
     }
 

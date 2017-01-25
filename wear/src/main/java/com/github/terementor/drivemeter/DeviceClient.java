@@ -11,19 +11,22 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class DeviceClient {
     private static final String TAG = "SensorDashboard/DeviceClient";
@@ -33,13 +36,14 @@ public class DeviceClient {
     private Deque<ContentValues> sensordeque2 = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<Long> testdeque = new ConcurrentLinkedDeque<Long>();
     private Boolean changedeque = true;
-    private AtomicInteger i = new AtomicInteger(0) ;
+    private AtomicInteger i = new AtomicInteger(0);
     private int j = 0;
     private Context context;
     private GoogleApiClient googleApiClient;
     private ExecutorService executorService;
     private int filterId;
     private SparseLongArray lastSensorData;
+    private long time2 = 0;
 
     private DeviceClient(Context context) {
         this.context = context;
@@ -58,38 +62,53 @@ public class DeviceClient {
         return instance;
     }
 
+
     public void setSensorFilter(int filterId) {
         Log.d(TAG, "Now filtering by sensor: "); //+ filterId
 
         this.filterId = filterId;
     }
 
-
-    //public void sendSensorData(SensorEvent event) {
-    /*public void sendSensorData(final int sensorType, final int accuracy, final long timestamp, final float[] values, final int minDelay, final String name) {
-        long t = System.currentTimeMillis();
-                long lastTimestamp = lastSensorData.get(sensorType);
-        long timeAgo = t - lastTimestamp;
-
-        if (lastTimestamp != 0) {
-            if (filterId == sensorType && timeAgo < 5) {
-                return;
-            }
-
-            if (filterId != sensorType && timeAgo < 3000) {
-                return;
-            }
-        }
-
-        lastSensorData.put(sensorType, t);
-
+    public void sendtime(long time) {
+        time2 = time;
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                sendSensorDataInBackground(sensorType, accuracy, timestamp, values);
+                PutDataMapRequest dataMap = PutDataMapRequest.create("/time/" + time2);
+                PutDataRequest putDataRequest = dataMap.asPutDataRequest();
+                send(putDataRequest);
+                Log.d(TAG, "Sedning WatchTime " + Long.toString(time2));
             }
         });
-    }*/
+    }
+
+    public void clearSensorDeques() {
+        this.sensordeque.clear();
+        this.sensordeque2.clear();
+        Log.d(TAG, "Clearing Deques");
+    }
+
+    public void sendreadyflag() {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+
+                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Calendar cal = Calendar.getInstance();
+                PutDataMapRequest dataMap = PutDataMapRequest.create("/Ready/" + dateFormat.format(cal.getTime()));
+
+                PutDataRequest putDataRequest = dataMap.asPutDataRequest();
+                if (validateConnection()) {
+                    Wearable.DataApi.putDataItem(googleApiClient, putDataRequest).setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+                        @Override
+                        public void onResult(DataApi.DataItemResult dataItemResult) {
+                            Log.d(TAG, "Sending ready signal: " + dataItemResult.getStatus().isSuccess());
+                        }
+                    });
+                }
+            }
+        });
+    }
 
     public void sendSensorData(SensorEvent event) {
         if (changedeque) {
@@ -116,7 +135,7 @@ public class DeviceClient {
             sensordeque2.addLast(daten2);
         }
 
-        if (sensordeque.size() ==  DataMapKeys.BATCHSIZE) {
+        if (sensordeque.size() == DataMapKeys.BATCHSIZE) {
             changedeque = false;
             Log.d(TAG, "Start mit sensordeque1 " + Integer.toString(sensordeque.size()));
             {
@@ -145,9 +164,9 @@ public class DeviceClient {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                ArrayList<Integer> accuracylist= new ArrayList<Integer>();
-                ArrayList<Integer> typelist= new ArrayList<Integer>();
-                ArrayList<Integer> counterlist= new ArrayList<Integer>();
+                ArrayList<Integer> accuracylist = new ArrayList<Integer>();
+                ArrayList<Integer> typelist = new ArrayList<Integer>();
+                ArrayList<Integer> counterlist = new ArrayList<Integer>();
                 long[] timearray = new long[DataMapKeys.BATCHSIZE];
                 float[] valuesxarray = new float[DataMapKeys.BATCHSIZE];
                 float[] valuesyarray = new float[DataMapKeys.BATCHSIZE];

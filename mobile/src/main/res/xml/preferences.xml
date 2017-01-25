@@ -48,7 +48,7 @@
             android:summaryOn="@string/pref_gps_category_summaryOn"
             android:title="@string/pref_gps_category_title" />
         <EditTextPreference
-            android:defaultValue="1"
+            android:defaultValue="500"
             android:dialogTitle="@string/pref_gps_update_period_title"
             android:key="gps_update_period_preference"
             android:summary="@string/pref_gps_update_period_summary"
@@ -75,7 +75,7 @@
             android:summaryOn="@string/pref_imperial_units_summaryOn"
             android:title="@string/pref_imperial_units_title" />
         <EditTextPreference
-            android:defaultValue="4"
+            android:defaultValue="500"
             android:dialogTitle="@string/pref_obd_update_period_title"
             android:key="obd_update_period_preference"
             android:summary="@string/pref_obd_update_period_summary"

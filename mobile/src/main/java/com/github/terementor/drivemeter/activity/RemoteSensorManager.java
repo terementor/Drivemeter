@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.Calendar;
 
 public class RemoteSensorManager {
     private static final String TAG = "SensorDashboard/RemoteSensorManager";
@@ -165,6 +166,16 @@ public class RemoteSensorManager {
             @Override
             public void run() {
                 controlMeasurementInBackground(ClientPaths.START_MEASUREMENT);
+            }
+        });
+    }
+
+    public void sendTime() {
+
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                controlMeasurementInBackground("/PhoneTime/" +Long.toString(Calendar.getInstance().getTimeInMillis()));
             }
         });
     }

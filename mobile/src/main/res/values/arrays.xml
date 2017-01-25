@@ -23763,4 +23763,30 @@
         <item>Ignition Input Start</item>
         <item>Ignition Input Off</item>
     </string-array>
+
+
+    <string-array name="driver_array">
+        <item>Driver 1</item>
+        <item>Driver 2</item>
+        <item>Driver 3</item>
+        <item>Driver 4</item>
+        <item>Driver 5</item>
+        <item>Driver 6</item>
+        <item>Driver 7</item>
+        <item>Driver 8</item>
+    </string-array>
+
+
+    <string-array name="situation_array">
+        <item>Situation 1</item>
+        <item>Situation 2</item>
+        <item>Situation 3</item>
+        <item>Situation 4</item>
+        <item>Situation 5</item>
+        <item>Situation 6</item>
+        <item>Situation 7</item>
+        <item>Situation 8</item>
+    </string-array>
+
+
 </resources>

@@ -77,7 +77,7 @@ public class SensorReceiverService extends WearableListenerService {
                 DataItem dataItem = dataEvent.getDataItem();
                 Uri uri = dataItem.getUri();
                 String path = uri.getPath();
-                Log.d(TAG, "Path" + path);
+                //Log.d(TAG, "Path" + path);
 
                 //Die Methode muss schneller frei werden
                 if (path.startsWith("/sensors/")) {
@@ -88,6 +88,13 @@ public class SensorReceiverService extends WearableListenerService {
                     );
                     long t1 = System.nanoTime();
                     Log.d(TAG, "UnpackSensorData took " + ((t1 - t0) / 1_000_000) + "ms");
+                }
+                if (path.startsWith("/Time/")) {
+                    MainActivity.setWatchTime(Long.parseLong(uri.getLastPathSegment()));
+                }
+                if (path.startsWith("/Ready/")) {
+                    MainActivity.setOutputsensorstrue();
+                    Log.d(TAG, "Received message: Ready");
                 }
             }
         }
@@ -109,7 +116,7 @@ public class SensorReceiverService extends WearableListenerService {
 
         for (int i = 0; i < timearray.length && i < valuesxarray.length; ++i) {
 
-            Log.d(TAG, "SensorEvent Nummer: " + counterlist.get(i) + " timestamp: " + Long.toString(timearray[i]));
+            //Log.d(TAG, "SensorEvent Nummer: " + counterlist.get(i) + " timestamp: " + Long.toString(timearray[i]));
             h++;
             if (k == 0) {
                 t0 = System.nanoTime();
@@ -122,34 +129,36 @@ public class SensorReceiverService extends WearableListenerService {
             }
             //Log.d(TAG, "Sensortyp: " + typelist.toString());
 
-            switch (typelist.get(i)) {
-                case 1: //Acceleration
-                    ContentValues daten = new ContentValues();
-                    daten.put("time", timearray[i]);
-                    daten.put("x", valuesxarray[i]);
-                    daten.put("y", valuesyarray[i]);
-                    daten.put("z", valueszarray[i]);
-                    dataDeques.addtoWearaccdeque(daten);
-                    //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
-                    break;
-                case 2: //Magenticfield
-                    ContentValues magdaten = new ContentValues();
-                    magdaten.put("time", timearray[i]);
-                    magdaten.put("x", valuesxarray[i]);
-                    magdaten.put("y", valuesyarray[i]);
-                    magdaten.put("z", valueszarray[i]);
-                    dataDeques.addtoWearmagdeque(magdaten);
-                    //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
-                    break;
-                case 4: //Gyroskop
-                    ContentValues gyrodaten = new ContentValues();
-                    gyrodaten.put("time", timearray[i]);
-                    gyrodaten.put("x", valuesxarray[i]);
-                    gyrodaten.put("y", valuesyarray[i]);
-                    gyrodaten.put("z", valueszarray[i]);
-                    dataDeques.addtoWeargyrodeque(gyrodaten);
-                    //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
-                    break;
+            if (MainActivity.getoutputsensors2()) {
+                switch (typelist.get(i)) {
+                    case 1: //Acceleration
+                        ContentValues daten = new ContentValues();
+                        daten.put("time", timearray[i]);
+                        daten.put("x", valuesxarray[i]);
+                        daten.put("y", valuesyarray[i]);
+                        daten.put("z", valueszarray[i]);
+                        dataDeques.addtoWearaccdeque(daten);
+                        //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
+                        break;
+                    case 2: //Magenticfield
+                        ContentValues magdaten = new ContentValues();
+                        magdaten.put("time", timearray[i]);
+                        magdaten.put("x", valuesxarray[i]);
+                        magdaten.put("y", valuesyarray[i]);
+                        magdaten.put("z", valueszarray[i]);
+                        dataDeques.addtoWearmagdeque(magdaten);
+                        //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
+                        break;
+                    case 4: //Gyroskop
+                        ContentValues gyrodaten = new ContentValues();
+                        gyrodaten.put("time", timearray[i]);
+                        gyrodaten.put("x", valuesxarray[i]);
+                        gyrodaten.put("y", valuesyarray[i]);
+                        gyrodaten.put("z", valueszarray[i]);
+                        dataDeques.addtoWeargyrodeque(gyrodaten);
+                        //Log.d(TAG, "Received sensor data Type" +  "_" + typelist.get(i));
+                        break;
+                }
             }
         }
         //sensorManager.addSensorData(sensorType, accuracy, timestamp, values);

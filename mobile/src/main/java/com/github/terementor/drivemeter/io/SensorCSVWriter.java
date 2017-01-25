@@ -55,6 +55,8 @@ public class SensorCSVWriter {
 
             mydatabase = SQLiteDatabase.openOrCreateDatabase(sdCard.getAbsolutePath() + File.separator + dirname + File.separator + filename + ".db", null, null);
             Log.d(TAG, "DB" + sdCard.getAbsolutePath() + File.separator + dirname + File.separator + filename +  ".db");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS MetaData (PhoneTime STRING, WearTime BIGINT, Driver INT, Situation INT, CountAccelerometer BIGINT, CountGyroskop BIGINT, CountMagnetic BIGINT," +
+                    " CountWearAccelerometer BIGINT, CountWearGyroskp BIGINT, CountWearMagnetic BIGINT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Gyroskop (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Accelerometer (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Rotation (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
@@ -63,6 +65,12 @@ public class SensorCSVWriter {
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearAccelerometer (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearRotation (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS WearMagnetic (time BIGINT, x FLOAT, y FLOAT, z FLOAT);");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS GPS (time BIGINT ,Latitude FLOAT, Longitude FLOAT, Altitude FLOAT);");
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS OBD (time BIGINT, BAROMETRIC_PRESSURE STRING, ENGINE_COOLANT_TEMP STRING, FUEL_LEVEL STRING, ENGINE_LOAD STRING, AMBIENT_AIR_TEMP STRING," +
+                    "ENGINE_RPM STRING, INTAKE_MANIFOLD_PRESSURE STRING, MAF STRING, Term Fuel_Trim Bank_1 STRING, FUEL_ECONOMY STRING, Long_Term_Fuel_Trim Bank_2 STRING, FUEL_TYPE STRING, AIR_INTAKE_TEMP STRING," +
+                    "FUEL_PRESSURE STRING, SPEED STRING, Short_Term_Fuel_Trim_Bank_2 STRING, Short_Term_Fuel_Trim_Bank_1 STRING, ENGINE_RUNTIME STRING, THROTTLE_POS STRING, DTC_NUMBER STRING, TROUBLE_CODES STRING," +
+                    "TIMING_ADVANCE STRING, EQUIV_RATIO STRING);");
+
 
             //mydatabase.close();
         }

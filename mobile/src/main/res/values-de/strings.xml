@@ -64,8 +64,8 @@
     <string name="pref_gps_category_title">Verwende GPS</string>
     <string name="pref_gps_distance_period_summary">Mindestdistanz zwischen Ortupdates (in Metern)</string>
     <string name="pref_gps_distance_period_title">Updatefrequenz (in Meter)</string>
-    <string name="pref_gps_update_period_summary">Dauer zwischen Statusabfragen (in Sekunden)</string>
-    <string name="pref_gps_update_period_title">Updatefrequenz (in Sekunden)</string>
+    <string name="pref_gps_update_period_summary">Dauer zwischen Statusabfragen (in Millisekunden)</string>
+    <string name="pref_gps_update_period_title">Updatefrequenz (in Millisekunden)</string>
     <string name="pref_imperial_units_summaryOff">Verwende angelsächsisches Maß</string>
     <string name="pref_imperial_units_summaryOn">Verwende wieder metrisches Maß</string>
     <string name="pref_imperial_units_title">Angelsächsische Einheiten</string>
@@ -73,12 +73,12 @@
     <string name="pref_obd_protocols_summary">Wähle ein OBD Protokoll</string>
     <string name="pref_max_fuel_econ_title">Maximaler Verbrauch</string>
     <string name="pref_obd_protocols_title">OBD Protokoll</string>
-    <string name="pref_obd_update_period_summary">Dauer zwischen Fahrzeugdatenabfragen (in Sekunden)</string>
+    <string name="pref_obd_update_period_summary">Dauer zwischen Fahrzeugdatenabfragen (in Millsekunden)</string>
     <string name="pref_reader_config_title">Reader Konfiguration Kommandos</string>
     <string name="pref_vehicle_id_title">Fahrzeug ID</string>
     <string name="pref_volumetric_efficiency_dialog_title">Volumetrischer Wirkungsgrad (z.B. 0.85)</string>
     <string name="pref_volumetric_efficiency_summary">Wird für die Verbrauchsberechnung bei Fahrzeuge ohne Luftmassensensor benötigt</string>
-    <string name="pref_obd_update_period_title">Updatefrequenz (in Sekunden)</string>
+    <string name="pref_obd_update_period_title">Updatefrequenz (in Millisekunden)</string>
     <string name="pref_reader_config_summary">Konfiguration des Bluetooth Readers. Je eine Einstellung pro Zeile</string>
     <string name="pref_vehicle_id_summary">Optionaler Key für dieses Fahrzeug, wird beim Upload der Daten genutzt</string>
     <string name="pref_volumetric_efficiency_title">Volumetrischer Wirkungsgrad</string>
