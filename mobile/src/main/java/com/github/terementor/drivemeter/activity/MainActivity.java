@@ -153,8 +153,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private TextView compass;
 
     private Deque<ContentValues> gyrodeque = new ConcurrentLinkedDeque<ContentValues>();
-    private Deque<ContentValues> obdspeeddeque = new ConcurrentLinkedDeque<ContentValues>();
-    private Deque<ContentValues> obdrpmdeque = new ConcurrentLinkedDeque<ContentValues>();
+    private Deque<ContentValues> obddeque = new ConcurrentLinkedDeque<ContentValues>();
+    private Deque<ContentValues> gpsdeque = new ConcurrentLinkedDeque<ContentValues>();
     //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private final SensorEventListener gyroListener = new SensorEventListener() {
 
@@ -324,11 +324,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 double lat = 0;
                 double lon = 0;
                 double alt = 0;
+                double nanos = 0;
                 final int posLen = 7;
                 if (mGpsIsStarted && mLastLocation != null) {
-                    lat = mLastLocation.getLatitude();
+                    /*lat = mLastLocation.getLatitude();
                     lon = mLastLocation.getLongitude();
                     alt = mLastLocation.getAltitude();
+                    nanos = mLastLocation.getElapsedRealtimeNanos();
 
                     StringBuilder sb = new StringBuilder();
                     sb.append("Lat: ");
@@ -337,7 +339,17 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     sb.append(String.valueOf(mLastLocation.getLongitude()).substring(0, posLen));
                     sb.append(" Alt: ");
                     sb.append(String.valueOf(mLastLocation.getAltitude()));
-                    gpsStatusTextView.setText(sb.toString());
+                    gpsStatusTextView.setText(sb.toString());*/
+
+                    //save in DB
+                    if (outputsensors2) { //TOdO das if kann in das obere if hineingezogen werden
+                        ContentValues gpsdata = new ContentValues();
+                        gpsdata.put("latidue", lat);
+                        gpsdata.put("longitude", lon);
+                        gpsdata.put("altitude", alt);
+                        gpsdata.put("time", nanos);
+                        gpsdeque.addLast(gpsdata);
+                    }
                 }
                 if (prefs.getBoolean(ConfigActivity.UPLOAD_DATA_KEY, false)) {
                     // Upload the current reading by http
@@ -358,12 +370,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     //Write the current reading to DB
                     if (outputsensors2) {
                         Log.d(TAG, "OBD Hashmap" + temp.toString());
-                        ContentValues speed = new ContentValues();
-                        ContentValues rpm = new ContentValues();
-                        speed.put("SPEED", temp.get("SPEED"));
-                        rpm.put("ENGINE_RPM", temp.get("ENGINE_RPM"));
-                        obdspeeddeque.addLast(speed);
-                        obdrpmdeque.addLast(rpm);
+                        ContentValues obddata = new ContentValues();
+                        obddata.put("speed", temp.get("SPEED"));
+                        obddata.put("rpm", temp.get("ENGINE_RPM"));
+                        obddata.put("time", temp.get("time"));
+                        obddeque.addLast(obddata);
                     }
                 }
                 commandResult.clear();
@@ -473,6 +484,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             existingTV.setText(cmdResult);
         } else addTableRow(cmdID, cmdName, cmdResult);
         commandResult.put(cmdID, cmdResult);
+        commandResult.put("time", Long.toString(System.nanoTime()));
         updateTripStatistic(job, cmdID);
     }
 
@@ -574,6 +586,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     protected void onDestroy() {
         super.onDestroy();
 
+        //StopWearService
+        //BusProvider.getInstance().unregister(this);
+        //remoteSensorManager.stopMeasurement();
+
         if (mLocService != null) {
             mLocService.removeGpsStatusListener(this);
             mLocService.removeUpdates(this);
@@ -596,8 +612,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         super.onPause();
 
         //WearCode
-        BusProvider.getInstance().unregister(this);
-        remoteSensorManager.stopMeasurement();
+        //BusProvider.getInstance().unregister(this);
+        //remoteSensorManager.stopMeasurement();
 
         Log.d(TAG, "Pausing..");
         releaseWakeLockIfHeld();
@@ -771,6 +787,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         Log.d(TAG, "startsensors()");
 
         outputsensors = true;
+        wakeLock.acquire();
         /*ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
         pool.schedule(new Runnable() {
             @Override
@@ -851,8 +868,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 accdeque.clear();
                 magdeque.clear();
                 rotdeque.clear();
-                obdspeeddeque.clear();
-                obdrpmdeque.clear();
+                obddeque.clear();
+                gpsdeque.clear();
 
 
                 //Write Sensordetails to CSV
@@ -932,6 +949,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                             Log.d(TAG, "Smartphonesensors are saving " + zaehler);
                             zaehler++;
                         }
+                        //Phone GPS
+                        if (!gpsdeque.isEmpty()) {
+                            ContentValues gpsdata = gpsdeque.pollFirst();
+                            SensorCSVWriter.mydatabase.insert("OBD", null, gpsdata);
+                        }
 
                         //Wearsensors write to Database
                         if (!dataDeques.WeargyrodequeisEmpty()) {
@@ -953,15 +975,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                         }
 
                         //OBD SPEED and RPM write to Database
-                        if (!obdspeeddeque.isEmpty()) {
-                            ContentValues speeddata = obdspeeddeque.pollFirst();
-                            Log.d(TAG, "Weardata is saving" + speeddata.toString());
-                            SensorCSVWriter.mydatabase.insert("OBD", null, speeddata);
-                        }
-                        if (!obdrpmdeque.isEmpty()) {
-                            ContentValues rpmdata = obdrpmdeque.pollFirst();
-                            Log.d(TAG, "Weardata is saving" + rpmdata.toString());
-                            SensorCSVWriter.mydatabase.insert("OBD", null, rpmdata);
+                        if (!obddeque.isEmpty()) {
+                            ContentValues obddata = obddeque.pollFirst();
+                            Log.d(TAG, "Weardata is saving" + obddata.toString());
+                            SensorCSVWriter.mydatabase.insert("OBD", null, obddata);
                         }
                     }
                 }
@@ -1016,6 +1033,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     mySensorCSVWriter.closeSensorCSVWriter();
                     Log.d(TAG, "CloseDB");
                 }
+                releaseWakeLockIfHeld();
                 break;
             }
             try {
