@@ -5,14 +5,6 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
 
-import com.github.terementor.drivemeter.data.Sensor;
-import com.github.terementor.drivemeter.data.SensorDataPoint;
-import com.github.terementor.drivemeter.data.SensorNames;
-import com.github.terementor.drivemeter.data.TagData;
-import com.github.terementor.drivemeter.events.BusProvider;
-import com.github.terementor.drivemeter.events.NewSensorEvent;
-import com.github.terementor.drivemeter.events.SensorUpdatedEvent;
-import com.github.terementor.drivemeter.events.TagAddedEvent;
 import com.github.terementor.drivemeter.shared.ClientPaths;
 import com.github.terementor.drivemeter.shared.DataMapKeys;
 import com.google.android.gms.common.ConnectionResult;
@@ -43,12 +35,12 @@ public class RemoteSensorManager {
 
     private Context context;
     private ExecutorService executorService;
-    private SparseArray<Sensor> sensorMapping;
-    private ArrayList<Sensor> sensors;
-    private SensorNames sensorNames;
+    //private SparseArray<Sensor> sensorMapping;
+    //private ArrayList<Sensor> sensors;
+    //private SensorNames sensorNames;
     private GoogleApiClient googleApiClient;
 
-    private LinkedList<TagData> tags = new LinkedList<>();
+    //private LinkedList<TagData> tags = new LinkedList<>();
 
     public static synchronized RemoteSensorManager getInstance(Context context) {
         if (instance == null) {
@@ -60,9 +52,9 @@ public class RemoteSensorManager {
 
     private RemoteSensorManager(Context context) {
         this.context = context;
-        this.sensorMapping = new SparseArray<Sensor>();
-        this.sensors = new ArrayList<Sensor>();
-        this.sensorNames = new SensorNames();
+        //this.sensorMapping = new SparseArray<Sensor>();
+        //this.sensors = new ArrayList<Sensor>();
+        //this.sensorNames = new SensorNames();
 
         this.googleApiClient = new GoogleApiClient.Builder(context)
                 .addApi(Wearable.API)
@@ -71,15 +63,15 @@ public class RemoteSensorManager {
         this.executorService = Executors.newCachedThreadPool();
     }
 
-    public List<Sensor> getSensors() {
+    /*public List<Sensor> getSensors() {
         return (List<Sensor>) sensors.clone();
-    }
+    }*/
 
-    public Sensor getSensor(long id) {
+    /*public Sensor getSensor(long id) {
         return sensorMapping.get((int) id);
-    }
+    }*/
 
-    private Sensor createSensor(int id) {
+    /*private Sensor createSensor(int id) {
         Sensor sensor = new Sensor(id, sensorNames.getName(id));
 
         sensors.add(sensor);
@@ -88,9 +80,9 @@ public class RemoteSensorManager {
         BusProvider.postOnMainThread(new NewSensorEvent(sensor));
 
         return sensor;
-    }
+    }*/
 
-    private Sensor getOrCreateSensor(int id) {
+    /*private Sensor getOrCreateSensor(int id) {
         Sensor sensor = sensorMapping.get(id);
 
         if (sensor == null) {
@@ -98,9 +90,9 @@ public class RemoteSensorManager {
         }
 
         return sensor;
-    }
+    }*/
 
-    public synchronized void addSensorData(int sensorType, int accuracy, long timestamp, float[] values) {
+    /*public synchronized void addSensorData(int sensorType, int accuracy, long timestamp, float[] values) {
         Sensor sensor = getOrCreateSensor(sensorType);
 
         // TODO: We probably want to pull sensor data point objects from a pool here
@@ -109,19 +101,19 @@ public class RemoteSensorManager {
         sensor.addDataPoint(dataPoint);
 
         BusProvider.postOnMainThread(new SensorUpdatedEvent(sensor, dataPoint));
-    }
+    }*/
 
-    public synchronized void addTag(String pTagName) {
+    /*public synchronized void addTag(String pTagName) {
         TagData tag = new TagData(pTagName, System.currentTimeMillis());
         this.tags.add(tag);
 
 
         BusProvider.postOnMainThread(new TagAddedEvent(tag));
-    }
+    }*/
 
-    public LinkedList<TagData> getTags() {
+    /*public LinkedList<TagData> getTags() {
         return (LinkedList<TagData>) tags.clone();
-    }
+    }*/
 
     private boolean validateConnection() {
         if (googleApiClient.isConnected()) {

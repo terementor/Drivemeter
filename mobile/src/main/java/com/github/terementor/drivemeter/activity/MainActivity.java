@@ -43,7 +43,6 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.os.StrictMode;
 
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
@@ -53,7 +52,6 @@ import com.github.pires.obd.enums.AvailableCommandNames;
 import com.github.terementor.drivemeter.R;
 import com.github.terementor.drivemeter.config.ObdConfig;
 import com.github.terementor.drivemeter.data.DataDeques;
-import com.github.terementor.drivemeter.events.BusProvider;
 import com.github.terementor.drivemeter.io.AbstractGatewayService;
 import com.github.terementor.drivemeter.io.LogCSVWriter;
 import com.github.terementor.drivemeter.io.MockObdGatewayService;
@@ -66,7 +64,6 @@ import com.github.terementor.drivemeter.net.ObdReading;
 import com.github.terementor.drivemeter.net.ObdService;
 import com.github.terementor.drivemeter.trips.TripLog;
 import com.github.terementor.drivemeter.trips.TripRecord;
-import com.github.terementor.drivemeter.net.NTPTime;
 import com.google.inject.Inject;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
@@ -75,7 +72,6 @@ import org.apache.commons.net.ntp.TimeInfo;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -574,7 +570,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         super.onDestroy();
 
         //StopWearService
-        BusProvider.getInstance().unregister(this);
+        //BusProvider.getInstance().unregister(this);
         remoteSensorManager.stopMeasurement();
 
         if (mLocService != null) {
@@ -764,7 +760,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         //WearCode
         //BusProvider.getInstance().register(this);
-        List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
+        //List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
         Log.d(TAG, "Wear" + "");
         remoteSensorManager.startMeasurement(prefs.getString(ConfigActivity.SMARTWATCH_SPEED, "20000"));
         remoteSensorManager.sendSensorSpeed();
