@@ -14,4 +14,5 @@ public class DataMapKeys {
     public static final int BATCHSIZE = 20;
     public static final int CUSTOMDELAY = 20000;
     public static final String WEARTIME = "weartime";
+    public static final String SYSTIME = "systime";
 }

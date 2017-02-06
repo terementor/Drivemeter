@@ -21,6 +21,7 @@ import java.util.Timer;
 
 public class MessageReceiverService extends WearableListenerService {
     private static final String TAG = "SensorDashboard/MessageReceiverService";
+    public static int speed = 20000;
 
     private DeviceClient deviceClient;
 
@@ -77,10 +78,25 @@ public class MessageReceiverService extends WearableListenerService {
             pool.shutdown();
         }*/
 
+        if (messageEvent.getPath().startsWith(ClientPaths.SENSOR_SPEED)) {
+            String path = messageEvent.getPath();
+            String idStr = path.substring(path.lastIndexOf('/') + 1);
+            long phonetime = Integer.parseInt(idStr);
+            Log.d(TAG, "Received message: " + messageEvent.getPath()+ ClientPaths.SENSOR_SPEED + idStr);
+        }
 
-
-        if (messageEvent.getPath().equals(ClientPaths.START_MEASUREMENT)) {
+        if (messageEvent.getPath().startsWith(ClientPaths.START_MEASUREMENT)) {
             startService(new Intent(this, SensorService.class));
+
+            if (messageEvent.getPath().endsWith("20000")){
+                speed = 20000;
+            } else if (messageEvent.getPath().endsWith("60000")) {
+                speed = 60000;
+            } else if (messageEvent.getPath().endsWith("200000")){
+                speed = 200000;
+            } else {
+                speed = 0;
+            }
         }
 
         if (messageEvent.getPath().equals(ClientPaths.STOP_MEASUREMENT)) {

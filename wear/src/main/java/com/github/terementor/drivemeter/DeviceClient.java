@@ -5,6 +5,11 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.util.Log;
 import android.util.SparseLongArray;
+import android.location.GpsStatus;
+import android.location.Location;
+//import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 
 import com.github.terementor.drivemeter.shared.DataMapKeys;
 import com.google.android.gms.common.ConnectionResult;
@@ -14,6 +19,18 @@ import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import android.os.Bundle;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -28,7 +45,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class DeviceClient {
+public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "SensorDashboard/DeviceClient";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
     public static DeviceClient instance;
@@ -44,11 +62,13 @@ public class DeviceClient {
     private int filterId;
     private SparseLongArray lastSensorData;
     private long time2 = 0;
+    private Location mLastLocation;
+
 
     private DeviceClient(Context context) {
         this.context = context;
 
-        googleApiClient = new GoogleApiClient.Builder(context).addApi(Wearable.API).build();
+        googleApiClient = new GoogleApiClient.Builder(context).addApi(Wearable.API).addApi(LocationServices.API).addConnectionCallbacks(this).addOnConnectionFailedListener(this).build();
 
         executorService = Executors.newCachedThreadPool();
         lastSensorData = new SparseLongArray();
@@ -119,6 +139,7 @@ public class DeviceClient {
             daten.put("z", event.values[2]);
             daten.put("type", event.sensor.getType());
             daten.put("accurancy", event.accuracy);
+            daten.put("systime", System.nanoTime());
 
             sensordeque.addLast(daten);
 
@@ -131,6 +152,7 @@ public class DeviceClient {
             daten2.put("z", event.values[2]);
             daten2.put("type", event.sensor.getType());
             daten2.put("accurancy", event.accuracy);
+            daten2.put("systime", System.nanoTime());
 
             sensordeque2.addLast(daten2);
         }
@@ -168,6 +190,7 @@ public class DeviceClient {
                 ArrayList<Integer> typelist = new ArrayList<Integer>();
                 ArrayList<Integer> counterlist = new ArrayList<Integer>();
                 long[] timearray = new long[DataMapKeys.BATCHSIZE];
+                long[] systimearray = new long[DataMapKeys.BATCHSIZE];
                 float[] valuesxarray = new float[DataMapKeys.BATCHSIZE];
                 float[] valuesyarray = new float[DataMapKeys.BATCHSIZE];
                 float[] valueszarray = new float[DataMapKeys.BATCHSIZE];
@@ -181,6 +204,7 @@ public class DeviceClient {
 
                     accuracylist.add(tmp.getAsInteger("accurancy"));
                     timearray[l] = tmp.getAsLong("time");
+                    systimearray[l] = tmp.getAsLong("systime");
                     valuesxarray[l] = tmp.getAsFloat("x");
                     valuesyarray[l] = tmp.getAsFloat("y");
                     valueszarray[l] = tmp.getAsFloat("z");
@@ -201,6 +225,7 @@ public class DeviceClient {
                         dataMap.getDataMap().putIntegerArrayList(DataMapKeys.ACCURACY, accuracylist);
                         dataMap.getDataMap().putIntegerArrayList(DataMapKeys.COUNTER, counterlist);
                         dataMap.getDataMap().putLongArray(DataMapKeys.TIMESTAMP, timearray);
+                        dataMap.getDataMap().putLongArray(DataMapKeys.SYSTIME, systimearray);
                         dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESX, valuesxarray);
                         dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESY, valuesyarray);
                         dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESZ, valueszarray);
@@ -243,4 +268,59 @@ public class DeviceClient {
             });
         }
     }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(1);
+                //.setFastestInterval(5)
+
+        /*LocationServices.FusedLocationApi
+                .requestLocationUpdates(googleApiClient, locationRequest, this)
+                .setResultCallback(new ResultCallback<Status>() {
+
+                    @Override
+                    public void onResult(Status status) {
+                        if (status.getStatus().isSuccess()) {
+                                Log.d(TAG, "Successfully requested location updates");
+                        } else {
+                            Log.e(TAG, "requesting loc up,"
+                                            + "statuscode:"
+                                            + status.getStatusCode()
+                                            + ",message:"
+                                            + status.getStatusMessage());
+                        }
+                    }
+                });*/
+    }
+
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "connection to location client suspended");
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed");
+    }
+
+    public void onLocationChanged(Location location) {
+
+        mLastLocation = location;
+        String prov =  location.getProvider();
+        double lat = mLastLocation.getLatitude();
+        double lon = mLastLocation.getLongitude();
+        double alt = mLastLocation.getAltitude();
+        double nanos = mLastLocation.getElapsedRealtimeNanos();
+        Log.d(TAG, "GPS Location: "+ lat + " " + lon + " " + alt + " "+ prov);
+    }
+
+    public void stopGPS (){
+        googleApiClient.disconnect();
+    }
+
 }

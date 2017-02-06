@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory
-        android:key="@string/pref_upload_category"
-        android:title="@string/pref_upload_category_title">
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:dialogTitle="@string/pref_upload_title"
-            android:key="upload_data_preference"
-            android:summaryOff="@string/pref_upload_summaryOff"
-            android:summaryOn="@string/pref_upload_summaryOn"
-            android:title="@string/pref_upload_title" />
-        <EditTextPreference
-            android:defaultValue="http://www.example.com/obd/get_data.php"
-            android:dialogTitle="@string/pref_upload_url_title"
-            android:key="upload_url_preference"
-            android:summary="@string/pref_upload_url_summary"
-            android:title="@string/pref_upload_url_title" />
-        <EditTextPreference
-            android:defaultValue=""
-            android:dialogTitle="@string/pref_vehicle_id_title"
-            android:key="vehicle_id_preference"
-            android:summary="@string/pref_vehicle_id_summary"
-            android:title="@string/pref_vehicle_id_title" />
-    </PreferenceCategory>
     <PreferenceCategory android:title="@string/title_pref_bluetooth">
         <CheckBoxPreference
             android:defaultValue="false"
@@ -119,7 +96,7 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/title_pref_full_logging">
         <CheckBoxPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="enable_full_logging"
             android:summary="@string/pref_enable_full_logging_summary"
             android:title="@string/pref_enable_full_logging_title"/>
@@ -129,5 +106,48 @@
             android:key="dirname_full_logging"
             android:summary="@string/pref_dirname_summary"
             android:title="@string/pref_dirname_title" />
+        <ListPreference
+            android:defaultValue="CSV"
+            android:dialogTitle="@string/pref_logging_type_title"
+            android:key="logging_type_preference"
+            android:summary="@string/pref_logging_type_summary"
+            android:title="@string/pref_logging_type_title" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_sensor_settings_title">
+        <ListPreference
+            android:defaultValue="DELAY_FASTEST"
+            android:dialogTitle="@string/pref_sensor_speed_title"
+            android:key="smartphone_speed_preference"
+            android:summary="@string/pref_sensor_speed_summary"
+            android:title="@string/pref_sensor_speed_title" />
+        <ListPreference
+            android:defaultValue="DELAY_GAME"
+            android:dialogTitle="@string/pref_wsensor_speed_title"
+            android:key="smartwatch_speed_preference"
+            android:summary="@string/pref_wsensor_speed_summary"
+            android:title="@string/pref_wsensor_speed_title" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="@string/pref_upload_category"
+        android:title="@string/pref_upload_category_title">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dialogTitle="@string/pref_upload_title"
+            android:key="upload_data_preference"
+            android:summaryOff="@string/pref_upload_summaryOff"
+            android:summaryOn="@string/pref_upload_summaryOn"
+            android:title="@string/pref_upload_title" />
+        <EditTextPreference
+            android:defaultValue="http://www.example.com/obd/get_data.php"
+            android:dialogTitle="@string/pref_upload_url_title"
+            android:key="upload_url_preference"
+            android:summary="@string/pref_upload_url_summary"
+            android:title="@string/pref_upload_url_title" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogTitle="@string/pref_vehicle_id_title"
+            android:key="vehicle_id_preference"
+            android:summary="@string/pref_vehicle_id_summary"
+            android:title="@string/pref_vehicle_id_title" />
     </PreferenceCategory>
 </PreferenceScreen>

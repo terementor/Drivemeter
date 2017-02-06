@@ -109,9 +109,11 @@ public class SensorReceiverService extends WearableListenerService {
         ArrayList<Integer> typelist = dataMap.getIntegerArrayList(DataMapKeys.TYPE);
         ArrayList<Integer> counterlist = dataMap.getIntegerArrayList(DataMapKeys.COUNTER);
         long[] timearray = dataMap.getLongArray(DataMapKeys.TIMESTAMP);
+        long[] systimearray = dataMap.getLongArray(DataMapKeys.SYSTIME);
         float[] valuesxarray = dataMap.getFloatArray(DataMapKeys.VALUESX);
         float[] valuesyarray = dataMap.getFloatArray(DataMapKeys.VALUESY);
         float[] valueszarray = dataMap.getFloatArray(DataMapKeys.VALUESZ);
+
 
 
         for (int i = 0; i < timearray.length && i < valuesxarray.length; ++i) {
@@ -134,6 +136,7 @@ public class SensorReceiverService extends WearableListenerService {
                     case 1: //Acceleration
                         ContentValues daten = new ContentValues();
                         daten.put("time", timearray[i]);
+                        daten.put("systime", systimearray[i]);
                         daten.put("x", valuesxarray[i]);
                         daten.put("y", valuesyarray[i]);
                         daten.put("z", valueszarray[i]);
@@ -143,6 +146,7 @@ public class SensorReceiverService extends WearableListenerService {
                     case 2: //Magenticfield
                         ContentValues magdaten = new ContentValues();
                         magdaten.put("time", timearray[i]);
+                        magdaten.put("systime", systimearray[i]);
                         magdaten.put("x", valuesxarray[i]);
                         magdaten.put("y", valuesyarray[i]);
                         magdaten.put("z", valueszarray[i]);
@@ -152,6 +156,7 @@ public class SensorReceiverService extends WearableListenerService {
                     case 4: //Gyroskop
                         ContentValues gyrodaten = new ContentValues();
                         gyrodaten.put("time", timearray[i]);
+                        gyrodaten.put("systime", systimearray[i]);
                         gyrodaten.put("x", valuesxarray[i]);
                         gyrodaten.put("y", valuesyarray[i]);
                         gyrodaten.put("z", valueszarray[i]);

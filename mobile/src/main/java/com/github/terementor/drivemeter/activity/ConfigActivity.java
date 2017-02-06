@@ -42,6 +42,7 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
     public static final String IMPERIAL_UNITS_KEY = "imperial_units_preference";
     public static final String COMMANDS_SCREEN_KEY = "obd_commands_screen";
     public static final String PROTOCOLS_LIST_KEY = "obd_protocols_preference";
+    public static final String LOGGING_TYPES_KEY = "logging_type_preference";
     public static final String ENABLE_GPS_KEY = "enable_gps_preference";
     public static final String GPS_UPDATE_PERIOD_KEY = "gps_update_period_preference";
     public static final String GPS_DISTANCE_PERIOD_KEY = "gps_distance_period_preference";
@@ -51,6 +52,10 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
     public static final String ENABLE_FULL_LOGGING_KEY = "enable_full_logging";
     public static final String DIRECTORY_FULL_LOGGING_KEY = "dirname_full_logging";
     public static final String DEV_EMAIL_KEY = "dev_email";
+    public static final String SMARTWATCH_SPEED = "smartwatch_speed_preference";
+    public static final String SMARTPHONE_SPEED = "smartphone_speed_preference";
+
+
 
     /**
      * @param prefs
@@ -205,6 +210,12 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
         ArrayList<CharSequence> protocolStrings = new ArrayList<>();
         ListPreference listProtocols = (ListPreference) getPreferenceScreen()
                 .findPreference(PROTOCOLS_LIST_KEY);
+        ListPreference listLoggingTypes = (ListPreference) getPreferenceScreen()
+                .findPreference(LOGGING_TYPES_KEY);
+        ListPreference listSmartphoneSpeed = (ListPreference) getPreferenceScreen()
+                .findPreference(SMARTPHONE_SPEED);
+        ListPreference listSmartwatchSpeed = (ListPreference) getPreferenceScreen()
+                .findPreference(SMARTWATCH_SPEED);
         String[] prefKeys = new String[]{ENGINE_DISPLACEMENT_KEY,
                 VOLUMETRIC_EFFICIENCY_KEY, OBD_UPDATE_PERIOD_KEY, MAX_FUEL_ECON_KEY};
         for (String prefKey : prefKeys) {
@@ -238,6 +249,20 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
         }
         listProtocols.setEntries(protocolStrings.toArray(new CharSequence[0]));
         listProtocols.setEntryValues(protocolStrings.toArray(new CharSequence[0]));
+
+        //Available Logging Formats
+        CharSequence[] loggingcs = {"CSV", "SQLite3"};
+        listLoggingTypes.setEntries(loggingcs);
+        listLoggingTypes.setEntryValues(loggingcs);
+
+        //Availabe Sensors Speeds (Delays)
+        CharSequence[] speedcs = {"NORMAL", "UI", "GAME", "FASTEST"};
+        CharSequence[] speedvaluescs = {"200000", "60000", "20000", "0"};
+        listSmartphoneSpeed.setEntries(speedcs);
+        listSmartphoneSpeed.setEntryValues(speedvaluescs);
+        listSmartwatchSpeed.setEntries(speedcs);
+        listSmartwatchSpeed.setEntryValues(speedvaluescs);
+
 
     /*
      * Let's use this device Bluetooth adapter to select which paired OBD-II

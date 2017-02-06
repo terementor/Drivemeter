@@ -1,6 +1,7 @@
 package com.github.terementor.drivemeter.activity;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -36,6 +37,7 @@ import java.util.Calendar;
 public class RemoteSensorManager {
     private static final String TAG = "SensorDashboard/RemoteSensorManager";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
+    private SharedPreferences prefs;
 
     private static RemoteSensorManager instance;
 
@@ -161,14 +163,24 @@ public class RemoteSensorManager {
         }
     }
 
-    public void startMeasurement() {
+    public void startMeasurement(final String speed) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                controlMeasurementInBackground(ClientPaths.START_MEASUREMENT);
+                controlMeasurementInBackground(ClientPaths.START_MEASUREMENT + "/"+ speed);
+
             }
         });
     }
+    public void sendSensorSpeed() {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                controlMeasurementInBackground("/0");
+            }
+        });
+    }//ClientPaths.SENSOR_SPEED + "/" +
+
 
     public void sendTime() {
 

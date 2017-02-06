@@ -82,4 +82,11 @@
     <string name="pref_reader_config_summary">Konfiguration des Bluetooth Readers. Je eine Einstellung pro Zeile</string>
     <string name="pref_vehicle_id_summary">Optionaler Key für dieses Fahrzeug, wird beim Upload der Daten genutzt</string>
     <string name="pref_volumetric_efficiency_title">Volumetrischer Wirkungsgrad</string>
+    <string name="pref_logging_type_summary">Wähle ein Logging Format</string>
+    <string name="pref_logging_type_title">Logging Format</string>
+    <string name="pref_sensor_settings_title">Sensor Einstellungen</string>
+    <string name="pref_sensor_speed_summary">Wähle eine Smartphone Sensorgeschwindigkeit</string>
+    <string name="pref_sensor_speed_title">P-Sensorgeschwindigkeit</string>
+    <string name="pref_wsensor_speed_summary">Wähle eine Smartwatch Sensorgeschwindigkeit</string>
+    <string name="pref_wsensor_speed_title">W-Sensorgeschwindigkeit</string>
 </resources>

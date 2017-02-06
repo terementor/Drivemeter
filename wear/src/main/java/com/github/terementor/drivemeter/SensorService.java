@@ -1,23 +1,45 @@
 package com.github.terementor.drivemeter;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+
 import android.app.Notification;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.GpsStatus;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.util.Log;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Calendar;
+
 import com.github.terementor.drivemeter.shared.DataMapKeys;
+import com.github.terementor.drivemeter.shared.NTPTime;
+import com.github.terementor.drivemeter.shared.NTPTimeInterface;
+
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
 
 import java.sql.Time;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class SensorService extends Service implements SensorEventListener {
+public class SensorService extends Service implements SensorEventListener, LocationListener, GpsStatus.Listener, NTPTimeInterface {
     private static final String TAG = "SensorDashboard/SensorService";
 
     private final static int SENS_ACCELEROMETER = Sensor.TYPE_ACCELEROMETER; //1
@@ -43,8 +65,11 @@ public class SensorService extends Service implements SensorEventListener {
     private final static int SENS_GEOMAGNETIC = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR; //20
     private final static int SENS_HEARTRATE = Sensor.TYPE_HEART_RATE; //21
 
-    private static boolean istimesend = true;
     private static boolean sendingstatus = false;
+    private LocationManager mLocService;
+    private LocationProvider mLocProvider;
+    private Location mLastLocation;
+    boolean mGpsIsStarted = false;
 
 
     SensorManager mSensorManager;
@@ -67,7 +92,10 @@ public class SensorService extends Service implements SensorEventListener {
 
         startForeground(1, builder.build());
 
+        gpsInit();
         startMeasurement();
+        Calendar c = Calendar.getInstance();
+        int seconds = c.get(Calendar.SECOND);
     }
 
     @Override
@@ -75,6 +103,11 @@ public class SensorService extends Service implements SensorEventListener {
         super.onDestroy();
 
         stopMeasurement();
+
+        if (mLocService != null) {
+            mLocService.removeGpsStatusListener(this);
+            mLocService.removeUpdates(this);
+        }
     }
 
     @Override
@@ -82,8 +115,22 @@ public class SensorService extends Service implements SensorEventListener {
         return null;
     }
 
+    public void processFinish(Long asyncresult) {
+        Log.d(TAG, "eiertanz " + asyncresult);
+    }
+
     protected void startMeasurement() {
         mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
+
+        //StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+        //StrictMode.setThreadPolicy(policy);
+        //gettime();
+
+        //Get time from local ntpserver
+        //NTPTime ntptime = new NTPTime();
+        //ntptime.delegate = this;
+        //ntptime.execute(2);
 
         Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
         //Sensor ambientTemperatureSensor = mSensorManager.getDefaultSensor(SENS_AMBIENT_TEMPERATURE);
@@ -128,7 +175,8 @@ public class SensorService extends Service implements SensorEventListener {
             if (accelerometerSensor != null) {
                 //The default data delay is suitable for monitoring typical screen orientation changes and uses a delay of 200,000 microseconds.
                 // You can specify other data delays, such as SENSOR_DELAY_GAME (20,000 microsecond delay), SENSOR_DELAY_UI (60,000 microsecond delay), or SENSOR_DELAY_FASTEST (0 microsecond delay)
-                mSensorManager.registerListener(this, accelerometerSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
+                mSensorManager.registerListener(this, accelerometerSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
+                Log.w(TAG, "AccSensor found with speed: " +MessageReceiverService.speed);
             } else {
                 Log.w(TAG, "No Accelerometer found");
             }
@@ -158,7 +206,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (gyroscopeSensor != null) {
-                mSensorManager.registerListener(this, gyroscopeSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
+                mSensorManager.registerListener(this, gyroscopeSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
                 Log.w(TAG, "No Gyroscope Sensor found");
             }
 
@@ -214,7 +262,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (magneticFieldSensor != null) {
-                mSensorManager.registerListener(this, magneticFieldSensor, DataMapKeys.CUSTOMDELAY); //SensorManager.SENSOR_DELAY_GAME
+                mSensorManager.registerListener(this, magneticFieldSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
             } else {
                 Log.d(TAG, "No Magnetic Field Sensor found");
             }
@@ -244,7 +292,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             if (rotationVectorSensor != null) {
-                mSensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                mSensorManager.registerListener(this, rotationVectorSensor, MessageReceiverService.speed);
             } else {
                 Log.d(TAG, "No Rotation Vector Sensor found");
             }
@@ -269,6 +317,8 @@ public class SensorService extends Service implements SensorEventListener {
         }
         //Wait with sending data to phone, to have enough time to initialize the phone
 
+        gpsStart();
+
         ScheduledExecutorService pool = Executors.newScheduledThreadPool(2);
         pool.schedule(new Runnable() {
             @Override
@@ -284,6 +334,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
         }, 3230000, TimeUnit.MICROSECONDS );
         pool.shutdown();
+
     }
 
     public void stopMeasurement() {
@@ -293,6 +344,7 @@ public class SensorService extends Service implements SensorEventListener {
         if (mScheduler != null && !mScheduler.isTerminated()) {
             mScheduler.shutdown();
         }
+        gpsStop();
     }
 
     /*public static void setdelay (){
@@ -322,7 +374,7 @@ public class SensorService extends Service implements SensorEventListener {
         //if (event.sensor.getType() == 1 ) {
             client.sendSensorData(event);
             if (event.sensor.getType() == 1 ) {
-                Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
+                //Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
             }
             //Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
         }
@@ -331,6 +383,116 @@ public class SensorService extends Service implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    private boolean gpsInit() {
+        mLocService = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (mLocService != null) {
+            mLocProvider = mLocService.getProvider(LocationManager.GPS_PROVIDER);
+            if (mLocProvider != null) {
+                mLocService.addGpsStatusListener(this);
+                if (mLocService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    return true;
+                }
+            }
+        }
+        Log.e(TAG, "Unable to get GPS PROVIDER");
+        // todo disable gps controls into Preferences
+        return false;
+    }
+
+    public void onLocationChanged(Location location) {
+
+        mLastLocation = location;
+        double lat = mLastLocation.getLatitude();
+        double lon = mLastLocation.getLongitude();
+        double alt = mLastLocation.getAltitude();
+        double nanos = mLastLocation.getElapsedRealtimeNanos();
+        Log.d(TAG, "GPS Location: ");
+    }
+
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    public void onProviderEnabled(String provider) {
+    }
+
+    public void onProviderDisabled(String provider) {
+    }
+
+    public void onGpsStatusChanged(int event) {
+
+        switch (event) {
+            case GpsStatus.GPS_EVENT_STARTED:
+                Log.d(TAG, "GPS is started: ");
+                break;
+            case GpsStatus.GPS_EVENT_STOPPED:
+                Log.d(TAG, "GPS is stopped: ");
+                break;
+            case GpsStatus.GPS_EVENT_FIRST_FIX:
+                Log.d(TAG, "GPS event first fix: ");
+                break;
+            case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                Log.d(TAG, "GPS event satelite status: ");
+                break;
+        }
+    }
+
+    private synchronized void gpsStart() {
+        if (!mGpsIsStarted && mLocProvider != null && mLocService != null && mLocService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            mLocService.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5, 0, this); //TODO von den prefs rüber geben handy - mLocProvider.getName()
+            mGpsIsStarted = true;
+            //Log.d(TAG, "GPS is started");
+        } else {
+            Log.e(TAG, "Unable to start GPS");
+        }
+    }
+
+    private synchronized void gpsStop() {
+        if (mGpsIsStarted) {
+            mLocService.removeUpdates(this);
+            mGpsIsStarted = false;
+        }
+    }
+
+
+    public static final String TIME_SERVER = "time-a.nist.gov";
+    public static final String LOCAL_SERVER = "192.168.43.1";
+    private void gettime (){
+        Log.d(TAG, "Enter TimeClass");
+        InetAddress inetAddress = null;
+        InetAddress inetAddress2 = null;
+        TimeInfo timeInfo = null;
+        TimeInfo timeInfo2 = null;
+        NTPUDPClient timeClient = new NTPUDPClient();
+        try {
+            //inetAddress = InetAddress.getByName(TIME_SERVER);
+            inetAddress2 = InetAddress.getByName(LOCAL_SERVER);
+
+        } catch (UnknownHostException er) {
+            Log.e(TAG, er.toString());
+        }
+        Log.d(TAG, "got inet adress");
+        try {
+            //timeInfo = timeClient.getTime(inetAddress);
+            timeInfo2 = timeClient.getTime(inetAddress2, 40000);
+        } catch (IOException er) {
+            Log.e(TAG, er.toString());
+        }
+
+        long sysreturnTime = timeInfo2.getReturnTime();   //local device time
+        //long returnTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();   //server time
+        long returnTime = timeInfo2.getMessage().getTransmitTimeStamp().getTime();   //server time
+
+        long timediff = sysreturnTime - returnTime;
+
+        Date time = new Date(returnTime);
+        //Log.d(TAG, "Time from " + TIME_SERVER + ": " + time);
+        Log.d(TAG, "Returntime " + LOCAL_SERVER + ": " + returnTime);
+        Log.d(TAG, "Systemtime " + ": " + sysreturnTime);
+        Log.d(TAG, "Differenz" + timediff);
+
 
     }
 }
