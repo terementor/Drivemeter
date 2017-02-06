@@ -148,7 +148,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private Spinner situation_spinner = null;
     private LocationManager mLocService;
     private LocationProvider mLocProvider;
-    private SensorCSVWriter SensorCSVWriter;
+    private SensorCSVWriter sensorCSVWriter;
     private LogCSVWriter detailsCSV;
     private LogCSVWriter accCSV;
     private LogCSVWriter waccCSV;
@@ -763,7 +763,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
 
         //WearCode
-        BusProvider.getInstance().register(this);
+        //BusProvider.getInstance().register(this);
         List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
         Log.d(TAG, "Wear" + "");
         remoteSensorManager.startMeasurement(prefs.getString(ConfigActivity.SMARTWATCH_SPEED, "20000"));
@@ -792,6 +792,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             rotCSV = null;
             wrotCSV = null;
             obdCSV = null;
+            sensorCSVWriter.mydatabase = null;
 
             long mils = System.currentTimeMillis();
             SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss_");
@@ -865,7 +866,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             }
             if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("SQLite3")) {
                 try {
-                    SensorCSVWriter = new SensorCSVWriter(sdf.format(new Date(mils)).toString() + "Drivemeter",
+                    sensorCSVWriter = new SensorCSVWriter(sdf.format(new Date(mils)).toString() + "Drivemeter",
                             prefs.getString(ConfigActivity.DIRECTORY_FULL_LOGGING_KEY,
                                     getString(R.string.default_dirname_full_logging)));
                 } catch (FileNotFoundException | RuntimeException e) {
@@ -935,52 +936,52 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
                                 if (!gyrodeque.isEmpty()) {
                                     ContentValues gyrodata = gyrodeque.pollFirst();
-                                    SensorCSVWriter.mydatabase.insert("Gyroskop", null, gyrodata);
+                                    sensorCSVWriter.mydatabase.insert("Gyroskop", null, gyrodata);
                                 }
                                 if (!accdeque.isEmpty()) {
                                     ContentValues accdata = accdeque.pollFirst();
-                                    SensorCSVWriter.mydatabase.insert("Accelerometer", null, accdata);
+                                    sensorCSVWriter.mydatabase.insert("Accelerometer", null, accdata);
                                 }
                                 if (!rotdeque.isEmpty()) {
                                     ContentValues rotdata = rotdeque.pollFirst();
-                                    SensorCSVWriter.mydatabase.insert("Rotation", null, rotdata);
+                                    sensorCSVWriter.mydatabase.insert("Rotation", null, rotdata);
                                 }
                                 if (!magdeque.isEmpty()) {
                                     ContentValues magdata = magdeque.pollFirst();
-                                    SensorCSVWriter.mydatabase.insert("Magnetic", null, magdata);
+                                    sensorCSVWriter.mydatabase.insert("Magnetic", null, magdata);
                                     Log.d(TAG, "Smartphonesensors are saving " + zaehler);
                                     zaehler++;
                                 }
                                 //Phone GPS
                                 if (!gpsdeque.isEmpty()) {
                                     ContentValues gpsdata = gpsdeque.pollFirst();
-                                    SensorCSVWriter.mydatabase.insert("GPS", null, gpsdata);
+                                    sensorCSVWriter.mydatabase.insert("GPS", null, gpsdata);
                                 }
 
                                 //Wearsensors write to Database
                                 if (!dataDeques.WeargyrodequeisEmpty()) {
                                     ContentValues weargyrodata = dataDeques.pollfromWeargyrodeque();
-                                    SensorCSVWriter.mydatabase.insert("WearGyroskop", null, weargyrodata);
+                                    sensorCSVWriter.mydatabase.insert("WearGyroskop", null, weargyrodata);
                                 }
                                 if (!dataDeques.WearaccdequeisEmpty()) {
                                     ContentValues wearaccdata = dataDeques.pollfromWearaccdeque();
-                                    SensorCSVWriter.mydatabase.insert("WearAccelerometer", null, wearaccdata);
+                                    sensorCSVWriter.mydatabase.insert("WearAccelerometer", null, wearaccdata);
                                 }
                                 if (!dataDeques.WearrotdequeisEmpty()) {
                                     ContentValues wearrotdata = dataDeques.pollfromWearrotdeque();
-                                    SensorCSVWriter.mydatabase.insert("WearRotation", null, wearrotdata);
+                                    sensorCSVWriter.mydatabase.insert("WearRotation", null, wearrotdata);
                                 }
                                 if (!dataDeques.WearmagdequeisEmpty()) {
                                     ContentValues wearmagdata = dataDeques.pollfromWearmagdeque();
                                     Log.d(TAG, "Weardata is saving" + wearmagdata.toString());
-                                    SensorCSVWriter.mydatabase.insert("WearMagnetic", null, wearmagdata);
+                                    sensorCSVWriter.mydatabase.insert("WearMagnetic", null, wearmagdata);
                                 }
 
                                 //OBD SPEED and RPM write to Database
                                 if (!obddeque.isEmpty()) {
                                     ContentValues obddata = obddeque.pollFirst();
                                     Log.d(TAG, "Weardata is saving" + obddata.toString());
-                                    SensorCSVWriter.mydatabase.insert("OBD", null, obddata);
+                                    sensorCSVWriter.mydatabase.insert("OBD", null, obddata);
                                 }
                             }
                             if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("CSV")) {
@@ -1047,7 +1048,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private void stopsensors() {
         //Stop Sensors from Wear
         Long t0 = System.nanoTime();
-        BusProvider.getInstance().unregister(this);
+        //BusProvider.getInstance().unregister(this);
         remoteSensorManager.stopMeasurement();
 
         DataDeques dataDeques = DataDeques.getInstance();
@@ -1069,8 +1070,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 gyrocounter = 0;
                 acccounter = 0;
                 magcounter = 0;
-                if (SensorCSVWriter.mydatabase != null) {
-                    SensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
+                if (sensorCSVWriter.mydatabase != null) {
+                    sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
                 }
                 alreadyExecuted = true;
 
@@ -1109,8 +1110,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 if (wrotCSV != null) {
                     wrotCSV.closeLogCSVWriter();
                 }
-                if (SensorCSVWriter.mydatabase != null) {
-                    SensorCSVWriter.mydatabase.close();
+                if (sensorCSVWriter.mydatabase != null) {
+                    sensorCSVWriter.mydatabase.close();
                 }
 
                 releaseWakeLockIfHeld();
