@@ -89,19 +89,6 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
         this.filterId = filterId;
     }
 
-    public void sendtime(long time) {
-        time2 = time;
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                PutDataMapRequest dataMap = PutDataMapRequest.create("/time/" + time2);
-                PutDataRequest putDataRequest = dataMap.asPutDataRequest();
-                send(putDataRequest);
-                Log.d(TAG, "Sedning WatchTime " + Long.toString(time2));
-            }
-        });
-    }
-
     public void clearSensorDeques() {
         this.sensordeque.clear();
         this.sensordeque2.clear();

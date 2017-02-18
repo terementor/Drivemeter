@@ -59,20 +59,15 @@ import com.github.terementor.drivemeter.io.ObdCommandJob;
 import com.github.terementor.drivemeter.io.ObdGatewayService;
 import com.github.terementor.drivemeter.io.ObdProgressListener;
 import com.github.terementor.drivemeter.io.SensorCSVWriter;
-import com.github.terementor.drivemeter.net.NTPTimeInterface;
 import com.github.terementor.drivemeter.net.ObdReading;
 import com.github.terementor.drivemeter.net.ObdService;
 import com.github.terementor.drivemeter.trips.TripLog;
 import com.github.terementor.drivemeter.trips.TripRecord;
 import com.google.inject.Inject;
 
-import org.apache.commons.net.ntp.NTPUDPClient;
-import org.apache.commons.net.ntp.TimeInfo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -93,17 +88,11 @@ import roboguice.inject.InjectView;
 
 import static com.github.terementor.drivemeter.activity.ConfigActivity.getGpsDistanceUpdatePeriod;
 import static com.github.terementor.drivemeter.activity.ConfigActivity.getGpsUpdatePeriod;
-
-//Wear inports
-//import com.github.terementor.drivemeter.data.Sensor;
-//test
-//
-
 // Some code taken from https://github.com/barbeau/gpstest
 
 @ContentView(R.layout.main)
 @TargetApi(22)
-public class MainActivity extends RoboActivity implements ObdProgressListener, LocationListener, GpsStatus.Listener, OnItemSelectedListener, NTPTimeInterface {
+public class MainActivity extends RoboActivity implements ObdProgressListener, LocationListener, GpsStatus.Listener, OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getName();
     private static final int NO_BLUETOOTH_ID = 0;
@@ -124,8 +113,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int STOP_BOTH = 58;
     private static boolean outputsensors = false;
     private static boolean outputsensors2 = false;
-    private static boolean logtodatabase = false;
-    private static boolean closedb = true;
     private static long WatchTime = 0;
     private static boolean bluetoothDefaultIsEnable = false;
     private static boolean alreadyExecuted = false;
@@ -156,6 +143,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private LogCSVWriter rotCSV;
     private LogCSVWriter wrotCSV;
     private LogCSVWriter obdCSV;
+    private LogCSVWriter metaCSV;
 
     private Location mLastLocation;
     /// the trip log
@@ -263,7 +251,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     };
 
     private Deque<ContentValues> magdeque = new ConcurrentLinkedDeque<ContentValues>();
-    //private SQLiteDatabase mydatabase;
     private int z = 0;
     private final SensorEventListener magListener = new SensorEventListener() {
         public void onSensorChanged(SensorEvent event) {
@@ -290,7 +277,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             // do nothing
         }
     };
-    //WearCode
     private RemoteSensorManager remoteSensorManager;
     @InjectView(R.id.BT_STATUS)
     private TextView btStatusTextView;
@@ -319,20 +305,21 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 double lat = 0;
                 double lon = 0;
                 double alt = 0;
-                double nanos = 0;
                 final int posLen = 7;
                 if (mGpsIsStarted && mLastLocation != null && outputsensors2) {
                     lat = mLastLocation.getLatitude();
                     lon = mLastLocation.getLongitude();
                     alt = mLastLocation.getAltitude();
-                    nanos = mLastLocation.getElapsedRealtimeNanos();
+                    Long nanos = mLastLocation.getElapsedRealtimeNanos();
+                    Long systemnanos = System.nanoTime();
 
                     //put gpsdata in deque
                     ContentValues gpsdata = new ContentValues();
-                    gpsdata.put("latidue", lat);
-                    gpsdata.put("longitude", lon);
-                    gpsdata.put("altitude", alt);
+                    gpsdata.put("lat", lat);
+                    gpsdata.put("lon", lon);
+                    gpsdata.put("alt", alt);
                     gpsdata.put("time", nanos);
+                    gpsdata.put("systemtime", systemnanos);
                     gpsdeque.addLast(gpsdata);
                 }
                 if (prefs.getBoolean(ConfigActivity.UPLOAD_DATA_KEY, false)) {
@@ -701,12 +688,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 stopsensors();
                 return true;
             case START_BOTH:
-                startsensors();
                 startLiveData();
+                startsensors();
                 return true;
             case STOP_BOTH:
-                stopsensors();
                 stopLiveData();
+                stopsensors();
                 return true;
             case SETTINGS:
                 updateConfig();
@@ -758,9 +745,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         wakeLock.acquire();
 
 
-        //WearCode
-        //BusProvider.getInstance().register(this);
-        //List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
+        //Start the Measurement on the watch WearCode
         Log.d(TAG, "Wear" + "");
         remoteSensorManager.startMeasurement(prefs.getString(ConfigActivity.SMARTWATCH_SPEED, "20000"));
         remoteSensorManager.sendSensorSpeed();
@@ -788,13 +773,14 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             rotCSV = null;
             wrotCSV = null;
             obdCSV = null;
+            metaCSV = null;
             sensorCSVWriter.mydatabase = null;
 
             long mils = System.currentTimeMillis();
             SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss_");
 
             try {
-                detailsCSV = new LogCSVWriter(sdf.format(new Date(mils)).toString() + "detailsCSV.csv",
+                detailsCSV = new LogCSVWriter(sdf.format(new Date(mils)).toString() + "details.csv",
                         prefs.getString(ConfigActivity.DIRECTORY_FULL_LOGGING_KEY,
                                 getString(R.string.default_dirname_full_logging))
                 );
@@ -855,6 +841,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                     getString(R.string.default_dirname_full_logging))
                     );
                     Log.d(TAG, "Created obdCSV logfiles");
+                    metaCSV = new LogCSVWriter(sdf.format(new Date(mils)).toString() + "meta.csv",
+                            prefs.getString(ConfigActivity.DIRECTORY_FULL_LOGGING_KEY,
+                                    getString(R.string.default_dirname_full_logging))
+                    );
+                    Log.d(TAG, "Created metaCSV logfiles");
 
                 } catch (FileNotFoundException | RuntimeException e) {
                     Log.e(TAG, "Can't enable logging to file.", e);
@@ -982,7 +973,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                             }
                             if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("CSV")) {
                                 //Smartphonesensors write to CSV
-                                String[] tmp = new String[4];
                                 if (!gyrodeque.isEmpty()) {
                                     writeSensorData(gyrodeque.pollFirst(), gyroCSV);
                                 }
@@ -999,13 +989,15 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                     zaehler++;
                                 }
                                 //Phone GPS
+                                String[] gpstmp = new String[5];
                                 if (!gpsdeque.isEmpty()) {
                                     ContentValues gpsdata = gpsdeque.pollFirst();
-                                    tmp[0] = Double.toString(gpsdata.getAsDouble("nanos"));
-                                    tmp[1] = Double.toString(gpsdata.getAsDouble("lat"));
-                                    tmp[2] = Double.toString(gpsdata.getAsDouble("lon"));
-                                    tmp[3] = Double.toString(gpsdata.getAsDouble("alt"));
-                                    gpsCSV.writestringLineCSV(tmp);
+                                    gpstmp[0] = Long.toString(gpsdata.getAsLong("time"));
+                                    gpstmp[1] = Long.toString(gpsdata.getAsLong("systemtime"));
+                                    gpstmp[2] = Double.toString(gpsdata.getAsDouble("lat"));
+                                    gpstmp[3] = Double.toString(gpsdata.getAsDouble("lon"));
+                                    gpstmp[4] = Double.toString(gpsdata.getAsDouble("alt"));
+                                    gpsCSV.writestringLineCSV(gpstmp);
                                 }
 
                                 //Wearsensors write to Database
@@ -1023,13 +1015,14 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                 }
 
                                 //OBD SPEED and RPM write to Database
+                                String[] obdtmp = new String[3];
                                 if (!obddeque.isEmpty()) {
                                     ContentValues obddata = obddeque.pollFirst();
                                     Log.d(TAG, "Weardata is saving" + obddata.toString());
-                                    tmp[0] = obddata.getAsString("time");
-                                    tmp[1] = obddata.getAsString("speed");
-                                    tmp[2] = obddata.getAsString("rpm");
-                                    obdCSV.writestringLineCSV(tmp);
+                                    obdtmp[0] = obddata.getAsString("time");
+                                    obdtmp[1] = obddata.getAsString("speed");
+                                    obdtmp[2] = obddata.getAsString("rpm");
+                                    obdCSV.writestringLineCSV(obdtmp);
                                 }
                             }
                         }
@@ -1044,7 +1037,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private void stopsensors() {
         //Stop Sensors from Wear
         Long t0 = System.nanoTime();
-        //BusProvider.getInstance().unregister(this);
         remoteSensorManager.stopMeasurement();
 
         DataDeques dataDeques = DataDeques.getInstance();
@@ -1063,14 +1055,25 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 metadata.put("CountGyroskop", gyrocounter);
                 metadata.put("CountAccelerometer", acccounter);
                 metadata.put("CountMagnetic", magcounter);
+                if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("SQLite3") && sensorCSVWriter.mydatabase != null) {
+                    sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
+                }
+                if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("CSV") && metaCSV != null) {
+                    String [] tmp = new String[7];
+                    tmp[0] = metadata.getAsString("PhoneTime");
+                    tmp[1] = "0";
+                    tmp[2] = metadata.getAsString("Driver");
+                    tmp[3] = metadata.getAsString("Situation");
+                    tmp[4] = Long.toString(acccounter);
+                    tmp[5] = Long.toString(gyrocounter);
+                    tmp[6] = Long.toString(magcounter);
+                    metaCSV.writestringLineCSV(tmp);
+                    Log.d(TAG, "metaCSV written " + tmp);
+                }
                 gyrocounter = 0;
                 acccounter = 0;
                 magcounter = 0;
-                if (sensorCSVWriter.mydatabase != null) {
-                    sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
-                }
-                alreadyExecuted = true;
-
+                alreadyExecuted = false;
 
                 Log.d(TAG, "All data is written");
 
@@ -1106,6 +1109,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 if (wrotCSV != null) {
                     wrotCSV.closeLogCSVWriter();
                 }
+                if (metaCSV != null) {
+                    metaCSV.closeLogCSVWriter();
+                }
+                if (obdCSV != null) {
+                    obdCSV.closeLogCSVWriter();
+                }
+
                 if (sensorCSVWriter.mydatabase != null) {
                     sensorCSVWriter.mydatabase.close();
                 }
@@ -1366,46 +1376,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         }
     }
 
-    public static final String TIME_SERVER = "time-a.nist.gov";
-    public static final String LOCAL_SERVER = "192.168.43.1";
-    private void gettime (){
-        Log.d(TAG, "Enter TimeClass");
-        InetAddress inetAddress = null;
-        InetAddress inetAddress2 = null;
-        TimeInfo timeInfo = null;
-        TimeInfo timeInfo2 = null;
-        NTPUDPClient timeClient = new NTPUDPClient();
-        try {
-            //inetAddress = InetAddress.getByName(TIME_SERVER);
-            inetAddress2 = InetAddress.getByName(LOCAL_SERVER);
-
-        } catch (UnknownHostException er) {
-            Log.e(TAG, er.toString());
-        }
-        Log.d(TAG, "got inet adress");
-        try {
-            //timeInfo = timeClient.getTime(inetAddress);
-            timeInfo2 = timeClient.getTime(inetAddress2, 40000);
-        } catch (IOException er) {
-            Log.e(TAG, er.toString());
-        }
-
-        long sysreturnTime = timeInfo2.getReturnTime();   //local device time
-        //long returnTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();   //server time
-        long returnTime = timeInfo2.getMessage().getTransmitTimeStamp().getTime();   //server time
-
-        long timediff = sysreturnTime - returnTime;
-
-        Date time = new Date(returnTime);
-        //Log.d(TAG, "Time from " + TIME_SERVER + ": " + time);
-        Log.d(TAG, "Returntime " + LOCAL_SERVER + ": " + returnTime);
-        Log.d(TAG, "Systemtime " + ": " + sysreturnTime);
-        Log.d(TAG, "Differenz" + timediff);
-
-
-    }
-
-    /**
+     /**
      * Uploading asynchronous task
      */
     private class UploadAsyncTask extends AsyncTask<ObdReading, Void, Void> {
@@ -1434,29 +1405,4 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         }
 
     }
-
-    //StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-    //StrictMode.setThreadPolicy(policy);
-    //gettime();
-    //new NTPTime().execute(2);
-        /*NTPTime ntpTime = new NTPTime(new NTPTime.NTPTimeInterface2() {
-            @Override
-            public void processFinish(Long output) {
-                Log.d(TAG, "Async: " + output);
-            }
-        }).execute();*/
-    //NTPTime ntptime = new NTPTime();
-    //ntptime.delegate = this;
-    //ntptime.execute(2);
-
-        /*ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
-        pool.schedule(new Runnable() {
-            @Override
-            public void run() {
-                setOutputsensorstrue();
-                Log.d(TAG, "Sensors are set true: ");
-            }
-        }, 4000, TimeUnit.MILLISECONDS);
-        pool.shutdown();*/
 }

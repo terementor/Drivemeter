@@ -25,8 +25,9 @@ public class LogCSVWriter {
             "Short Term Fuel Trim Bank 1", "ENGINE_RUNTIME", "THROTTLE_POS", "DTC_NUMBER",
             "TROUBLE_CODES", "TIMING_ADVANCE", "EQUIV_RATIO"};
     private static final String[] SENSOR_COlUMNS = {"time", "x", "y", "z"};
-    private static final String[] GPS_COlUMNS = {"time", "lat", "lon", "alt"};
+    private static final String[] GPS_COlUMNS = {"time","systemtime", "lat", "lon", "alt"};
     private static final String[] OBD_COLUMNS = {"time", "speed", "rpm"};
+    private static final String[] META_COLUMNS = {"PhoneTime", "WearTime", "Driver", "Situation", "CountAccelerometer", "CountGyropskop", "CountMagnetic", "CountWearAccelerometer", "CountWearGyropskop", "CountWearMagnetic"};
     private static final String[] DETAILS_COLUMNS = {"Name", "Vendor", "Type", "Resolution", "MinDelay", "MaxDelay"};
     private static final String[] NAMES_COLUMNS_ONLY_READINGS = {
             "BAROMETRIC_PRESSURE", "ENGINE_COOLANT_TEMP", "FUEL_LEVEL", "ENGINE_LOAD", "AMBIENT_AIR_TEMP",
@@ -49,11 +50,8 @@ public class LogCSVWriter {
             FileOutputStream fos = new FileOutputStream(file);
             OutputStreamWriter osw = new OutputStreamWriter(fos);
             this.buf = new BufferedWriter(osw);
-            this.isFirstLine = true;
-
 
             addLine(HEADER_CSV);
-
             //Decide which columens have to be use for the created csv file
             String[] columns = null;
             if (filename.contains("gyro") || filename.contains("acc") || filename.contains("mag") || filename.contains("rot")) {
@@ -64,6 +62,9 @@ public class LogCSVWriter {
                 columns = OBD_COLUMNS;
             } else if (filename.contains("gps")) {
                 columns = GPS_COlUMNS;
+            } else if (filename.contains("meta")) {
+                columns = META_COLUMNS;
+                Log.d(TAG, "Wrote meta columns");
             }
 
             // Add line with the columns
@@ -88,76 +89,12 @@ public class LogCSVWriter {
         }
     }
 
-    public void writeLineCSV(ObdReading reading) {
-        String crl;
-
-        if (isFirstLine) {
-            crl = HEADER_CSV + reading.toString();
-            addLine(crl);
-            isFirstLine = false;
-
-            // Add line with the columns
-            crl = "";
-            for (String ccln : NAMES_COLUMNS) {
-                crl += ccln + ";";
-            }
-            addLine(crl.substring(0, crl.length() - 1)); // remove last ";"
-
-        } else {
-
-            crl = reading.getTimestamp() + ";" +
-                    reading.getLatitude() + ";" +
-                    reading.getLongitude() + ";" +
-                    reading.getAltitude() + ";" +
-                    reading.getVin() + ";";
-
-
-            Map<String, String> read = reading.getReadings();
-
-            for (String ccln : NAMES_COLUMNS_ONLY_READINGS) {
-                crl += read.get(ccln) + ";";
-            }
-
-            addLine(crl.substring(0, crl.length() - 1));
-        }
-    }
-
     public void writestringLineCSV(String[] data) {
-        String crl;
-
-        if (false) {
-
-            crl = HEADER_CSV;// + reading.toString();
-
-            addLine(crl);
-            isFirstLine = false;
-
-            // Add line with the columns
-            crl = "";
-            for (String ccln : NAMES_COLUMNS) {
-                crl += ccln + ";";
-            }
-            addLine(crl.substring(0, crl.length() - 1)); // remove last ";"
-
-        } else {
-            crl = "";
-            //crl = .getTimestamp() + ";" +
-            //        reading.getLatitude() + ";" +
-            //        reading.getLongitude() + ";" +
-            //        reading.getAltitude() + ";" +
-            //crl = data[0] + data[2] + data[3] + data[4] + data[5] + data[6];
-            for (String ccln : data) {
-                crl += ccln + ";";
-            }
-
-            //Map<String, String> read = reading.getReadings();
-
-            //for (String ccln : NAMES_COLUMNS_ONLY_READINGS) {
-            //    crl += read.get(ccln) + ";";
-            //}
-
-            addLine(crl.substring(0, crl.length() - 1));
+        String crl = "";
+        for (String ccln : data) {
+            crl += ccln + ";";
         }
+        addLine(crl.substring(0, crl.length() - 1));
     }
 
     private void addLine(String line) {

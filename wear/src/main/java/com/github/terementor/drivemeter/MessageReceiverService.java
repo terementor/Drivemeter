@@ -55,36 +55,7 @@ public class MessageReceiverService extends WearableListenerService {
     public void onMessageReceived(MessageEvent messageEvent) {
         Log.d(TAG, "Received message: " + messageEvent.getPath());
 
-        /*if (messageEvent.getPath().startsWith("/PhoneTime/")) {
-            long watchtime = Calendar.getInstance().getTimeInMillis();
-            String path = messageEvent.getPath();
-            String idStr = path.substring(path.lastIndexOf('/') + 1);
-            long phonetime = Long.parseLong(idStr);
-            Log.d(TAG, "Received message: " + messageEvent.getPath()+ "Phonetime " + phonetime + " Watchtime " + watchtime);
-
-            watchtime = watchtime + 2000;
-
-            //Timer timer = new Timer();
-            //timer.schedule();
-
-            ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
-            pool.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    SensorService.setdelay();
-                    Log.d(TAG, "Später: " );
-                }
-            }, 10, TimeUnit.MILLISECONDS ); //Warten bis Ausführung
-            pool.shutdown();
-        }*/
-
-        if (messageEvent.getPath().startsWith(ClientPaths.SENSOR_SPEED)) {
-            String path = messageEvent.getPath();
-            String idStr = path.substring(path.lastIndexOf('/') + 1);
-            long phonetime = Integer.parseInt(idStr);
-            Log.d(TAG, "Received message: " + messageEvent.getPath()+ ClientPaths.SENSOR_SPEED + idStr);
-        }
-
+        //check for startmessage with sensorspeed settings
         if (messageEvent.getPath().startsWith(ClientPaths.START_MEASUREMENT)) {
             startService(new Intent(this, SensorService.class));
 

@@ -18,8 +18,6 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,9 +33,6 @@ public class RemoteSensorManager {
 
     private Context context;
     private ExecutorService executorService;
-    //private SparseArray<Sensor> sensorMapping;
-    //private ArrayList<Sensor> sensors;
-    //private SensorNames sensorNames;
     private GoogleApiClient googleApiClient;
 
     //private LinkedList<TagData> tags = new LinkedList<>();
@@ -52,10 +47,6 @@ public class RemoteSensorManager {
 
     private RemoteSensorManager(Context context) {
         this.context = context;
-        //this.sensorMapping = new SparseArray<Sensor>();
-        //this.sensors = new ArrayList<Sensor>();
-        //this.sensorNames = new SensorNames();
-
         this.googleApiClient = new GoogleApiClient.Builder(context)
                 .addApi(Wearable.API)
                 .build();
@@ -63,65 +54,12 @@ public class RemoteSensorManager {
         this.executorService = Executors.newCachedThreadPool();
     }
 
-    /*public List<Sensor> getSensors() {
-        return (List<Sensor>) sensors.clone();
-    }*/
-
-    /*public Sensor getSensor(long id) {
-        return sensorMapping.get((int) id);
-    }*/
-
-    /*private Sensor createSensor(int id) {
-        Sensor sensor = new Sensor(id, sensorNames.getName(id));
-
-        sensors.add(sensor);
-        sensorMapping.append(id, sensor);
-
-        BusProvider.postOnMainThread(new NewSensorEvent(sensor));
-
-        return sensor;
-    }*/
-
-    /*private Sensor getOrCreateSensor(int id) {
-        Sensor sensor = sensorMapping.get(id);
-
-        if (sensor == null) {
-            sensor = createSensor(id);
-        }
-
-        return sensor;
-    }*/
-
-    /*public synchronized void addSensorData(int sensorType, int accuracy, long timestamp, float[] values) {
-        Sensor sensor = getOrCreateSensor(sensorType);
-
-        // TODO: We probably want to pull sensor data point objects from a pool here
-        SensorDataPoint dataPoint = new SensorDataPoint(timestamp, accuracy, values);
-
-        sensor.addDataPoint(dataPoint);
-
-        BusProvider.postOnMainThread(new SensorUpdatedEvent(sensor, dataPoint));
-    }*/
-
-    /*public synchronized void addTag(String pTagName) {
-        TagData tag = new TagData(pTagName, System.currentTimeMillis());
-        this.tags.add(tag);
-
-
-        BusProvider.postOnMainThread(new TagAddedEvent(tag));
-    }*/
-
-    /*public LinkedList<TagData> getTags() {
-        return (LinkedList<TagData>) tags.clone();
-    }*/
 
     private boolean validateConnection() {
         if (googleApiClient.isConnected()) {
             return true;
         }
-
         ConnectionResult result = googleApiClient.blockingConnect(CLIENT_CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
-
         return result.isSuccess();
     }
 
@@ -133,8 +71,6 @@ public class RemoteSensorManager {
             }
         });
     }
-
-    ;
 
     private void filterBySensorIdInBackground(final int sensorId) {
         Log.d(TAG, "filterBySensorId(" + sensorId + ")");
@@ -171,7 +107,7 @@ public class RemoteSensorManager {
                 controlMeasurementInBackground("/0");
             }
         });
-    }//ClientPaths.SENSOR_SPEED + "/" +
+    }
 
 
     public void sendTime() {

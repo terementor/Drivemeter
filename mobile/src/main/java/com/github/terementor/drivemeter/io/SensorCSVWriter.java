@@ -1,6 +1,5 @@
 package com.github.terementor.drivemeter.io;
 
-import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.util.Log;
@@ -8,9 +7,6 @@ import android.util.Log;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 
 
 public class SensorCSVWriter {
