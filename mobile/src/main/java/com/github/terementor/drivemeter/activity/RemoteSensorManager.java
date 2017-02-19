@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
 
+import com.github.terementor.drivemeter.R;
 import com.github.terementor.drivemeter.shared.ClientPaths;
 import com.github.terementor.drivemeter.shared.DataMapKeys;
 import com.google.android.gms.common.ConnectionResult;
@@ -97,25 +98,6 @@ public class RemoteSensorManager {
             public void run() {
                 controlMeasurementInBackground(ClientPaths.START_MEASUREMENT + "/"+ speed);
 
-            }
-        });
-    }
-    public void sendSensorSpeed() {
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                controlMeasurementInBackground("/0");
-            }
-        });
-    }
-
-
-    public void sendTime() {
-
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                controlMeasurementInBackground("/PhoneTime/" +Long.toString(Calendar.getInstance().getTimeInMillis()));
             }
         });
     }

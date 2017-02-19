@@ -78,7 +78,7 @@
     <ScrollView
         android:id="@+id/data_scroll"
         android:layout_width="fill_parent"
-        android:layout_height="310dp"
+        android:layout_height="279dp"
         android:layout_gravity="top"
         android:layout_margin="10dp"
         android:elevation="2dp"
@@ -144,6 +144,66 @@
 
         <TextView
             android:id="@+id/OBD_STATUS"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/text_phone"
+            android:textSize="@dimen/abc_text_size_medium_material" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/text_watch"
+            android:textSize="@dimen/abc_text_size_medium_material" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/text_obdoutput"
+            android:textSize="@dimen/abc_text_size_medium_material" />
+
+
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/PHONE_STATUS"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="" />
+
+        <TextView
+            android:id="@+id/WATCH_STATUS"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="" />
+
+        <TextView
+            android:id="@+id/OBDOUTPUT_STATUS"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

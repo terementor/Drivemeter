@@ -25,7 +25,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -64,7 +63,6 @@ import com.github.terementor.drivemeter.net.ObdService;
 import com.github.terementor.drivemeter.trips.TripLog;
 import com.github.terementor.drivemeter.trips.TripRecord;
 import com.google.inject.Inject;
-
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -113,9 +111,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int STOP_BOTH = 58;
     private static boolean outputsensors = false;
     private static boolean outputsensors2 = false;
-    private static long WatchTime = 0;
     private static boolean bluetoothDefaultIsEnable = false;
     private static boolean alreadyExecuted = false;
+    private static boolean watchtextviewupdate = false;
+    private static boolean phonetextviewupdate = false;
+    private static boolean obdtextviewupdate = false;
     private static long gyrocounter = 0;
     private static long acccounter = 0;
     private static long magcounter = 0;
@@ -284,6 +284,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private TextView obdStatusTextView;
     @InjectView(R.id.GPS_POS)
     private TextView gpsStatusTextView;
+    @InjectView(R.id.PHONE_STATUS)
+    private TextView phoneStatusTextView;
+    @InjectView(R.id.WATCH_STATUS)
+    private TextView watchStatusTextView;
+    @InjectView(R.id.OBDOUTPUT_STATUS)
+    private TextView obdoutputStatusTextView;
     @InjectView(R.id.vehicle_view)
     private LinearLayout vv;
     @InjectView(R.id.data_table)
@@ -391,11 +397,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             isServiceBound = false;
         }
     };
-
-    public static boolean setWatchTime(Long time) {
-        WatchTime = time;
-        return true;
-    }
 
     public static String LookUpCommand(String txt) {
         for (AvailableCommandNames item : AvailableCommandNames.values()) {
@@ -734,29 +735,28 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         wakeLock.acquire();
     }
 
-    public void processFinish(Long asyncresult) {
-        Log.d(TAG, "eiertanz " + asyncresult);
-    }
-
     private void startsensors() {
         Log.d(TAG, "startsensors()");
 
         outputsensors = true;
+        phonetextviewupdate = false;
+        watchtextviewupdate = false;
+        obdtextviewupdate = false;
+
+        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
+                "ObdReader");
         wakeLock.acquire();
 
 
         //Start the Measurement on the watch WearCode
         Log.d(TAG, "Wear" + "");
         remoteSensorManager.startMeasurement(prefs.getString(ConfigActivity.SMARTWATCH_SPEED, "20000"));
-        remoteSensorManager.sendSensorSpeed();
 
         //Register Listener
         sensorManager.registerListener(gyroListener, gyroSensor, Integer.parseInt(prefs.getString(ConfigActivity.SMARTPHONE_SPEED, "0"))); // 200Hz, beim Nexus 5x 400hz
         sensorManager.registerListener(accListener, accSensor, Integer.parseInt(prefs.getString(ConfigActivity.SMARTPHONE_SPEED, "0"))); // 200Hz
         //sensorManager.registerListener(rotListener, rotSensor, Integer.parseInt(prefs.getString(ConfigActivity.SMARTPHONE_SPEED, "0"))); // 100Hz
         sensorManager.registerListener(magListener, magSensor, Integer.parseInt(prefs.getString(ConfigActivity.SMARTPHONE_SPEED, "0"))); // 100Hz
-        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
-                "ObdReader");
 
 
         if (prefs.getBoolean(ConfigActivity.ENABLE_FULL_LOGGING_KEY, true)) {
@@ -846,7 +846,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                     getString(R.string.default_dirname_full_logging))
                     );
                     Log.d(TAG, "Created metaCSV logfiles");
-
                 } catch (FileNotFoundException | RuntimeException e) {
                     Log.e(TAG, "Can't enable logging to file.", e);
                 }
@@ -866,13 +865,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             Log.d(TAG, "Starting sensors..");
 
             Runnable runnable = new Runnable() {
-                private final Handler handler = new Handler() {
+                /*private final Handler handler = new Handler() {
                     public void handleMessage(Message msg) {
                         String aResponse = msg.getData().getString("message");
                         updateTextView(compass, aResponse);
                         Log.d(TAG, "#" + aResponse);
                     }
-                };
+                };*/
 
                 public void run() {
                     //TODO get sensor meta data for later CSV
@@ -898,11 +897,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     int zaehler = 0;
 
                     //Start Handshake with Watch
-                    remoteSensorManager.sendTime();
-                    Log.d(TAG, "WatchTime " + WatchTime);
+                    //remoteSensorManager.sendTime();
+                    //Log.d(TAG, "WatchTime " + WatchTime);
 
-                    //outputsensors = true;
-                    //Write Sensordata in Database
+                    //Write Sensordata to csv or sql output
                     while (outputsensors) {
                         if (outputsensors2) {
 
@@ -915,6 +913,33 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                 //Getting Driver and Situation choices
                                 metadata.put("Driver", driver_spinner.getSelectedItem().toString().substring(7));
                                 metadata.put("Situation", situation_spinner.getSelectedItem().toString().substring(10));
+                            }
+                            if ((!gyrodeque.isEmpty() || !rotdeque.isEmpty() || !accdeque.isEmpty() || !magdeque.isEmpty()) && !phonetextviewupdate) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        watchStatusTextView.setText(getString(R.string.status_phone_saving));
+                                    }
+                                });
+                                phonetextviewupdate = true;
+                            }
+                            if ((!dataDeques.WearaccdequeisEmpty() || !dataDeques.WeargyrodequeisEmpty() || !dataDeques.WearmagdequeisEmpty() || !dataDeques.WearrotdequeisEmpty()) && !watchtextviewupdate) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        phoneStatusTextView.setText(getString(R.string.status_watch_saving));
+                                    }
+                                });
+                                watchtextviewupdate = true;
+                            }
+                            if (!obddeque.isEmpty()&& !obdtextviewupdate) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        obdoutputStatusTextView.setText(getString(R.string.status_obdoutput_saving));
+                                    }
+                                });
+                                obdtextviewupdate = true;
                             }
 
 
@@ -1059,7 +1084,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
                 }
                 if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("CSV") && metaCSV != null) {
-                    String [] tmp = new String[7];
+                    String[] tmp = new String[7];
                     tmp[0] = metadata.getAsString("PhoneTime");
                     tmp[1] = "0";
                     tmp[2] = metadata.getAsString("Driver");
@@ -1130,7 +1155,15 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             }
         }
         Long t1 = System.nanoTime();
-        Log.d(TAG, "Writing took " + (t1-t0));
+        Log.d(TAG, "Writing took " + (t1 - t0));
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                phoneStatusTextView.setText(getString(R.string.status_phone_done));
+                watchStatusTextView.setText(getString(R.string.status_watch_done));
+                obdoutputStatusTextView.setText(getString(R.string.status_obdoutput_done));
+            }
+        });
     }
 
     private void stopLiveData() {
@@ -1349,7 +1382,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     }
 
     public void writeSensorDetails(Sensor sensor, LogCSVWriter csvfile) {
-        if (sensor != null && csvfile != null){
+        if (sensor != null && csvfile != null) {
             String[] details = new String[6];
             details[0] = sensor.getName();
             details[1] = sensor.getVendor();
@@ -1365,18 +1398,18 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
     public void writeSensorData(ContentValues cv, LogCSVWriter csvfile) {
         if (csvfile != null) {
-            String [] tmp = new String[4];
+            String[] tmp = new String[4];
             tmp[0] = Long.toString(cv.getAsLong("time"));
             tmp[1] = Float.toString(cv.getAsFloat("x"));
             tmp[2] = Float.toString(cv.getAsFloat("y"));
             tmp[3] = Float.toString(cv.getAsFloat("z"));
             csvfile.writestringLineCSV(tmp);
-        }else {
+        } else {
             Log.e(TAG, "Cant write data to CSV");
         }
     }
 
-     /**
+    /**
      * Uploading asynchronous task
      */
     private class UploadAsyncTask extends AsyncTask<ObdReading, Void, Void> {

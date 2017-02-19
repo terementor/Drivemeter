@@ -89,9 +89,7 @@ public class SensorReceiverService extends WearableListenerService {
                     long t1 = System.nanoTime();
                     Log.d(TAG, "UnpackSensorData took " + ((t1 - t0) / 1_000_000) + "ms");
                 }
-                if (path.startsWith("/Time/")) {
-                    MainActivity.setWatchTime(Long.parseLong(uri.getLastPathSegment()));
-                }
+
                 if (path.startsWith("/Ready/")) {
                     MainActivity.setOutputsensorstrue();
                     Log.d(TAG, "Received message: Ready");

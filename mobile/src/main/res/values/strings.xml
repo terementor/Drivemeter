@@ -26,6 +26,9 @@
     <string name="text_obd" translatable="false">OBD</string>
     <string name="text_bluetooth" translatable="false">Bluetooth</string>
     <string name="text_orientation_default" translatable="false">N</string>
+    <string name="text_phone" translatable="false">Phone</string>
+    <string name="text_watch" translatable="false">Watch</string>
+    <string name="text_obdoutput" translatable="false">OBD</string>
     <string name="text_zero" translatable="false">0</string>
     <string name="text_consumption_default" translatable="false">0l/100km</string>
     <string name="text_runtime_default" translatable="false">00:00:00</string>
@@ -106,4 +109,10 @@
     <string name="pref_dev_email_title">Developer Email</string>
     <string name="pref_dev_email_summary">Logs will be emailed to this address</string>
     <string name="text_noerrors">There were no errors found.!</string>
+    <string name="status_watch_saving">is saving&#8230;</string>
+    <string name="status_phone_saving">is saving&#8230;</string>
+    <string name="status_obdoutput_saving">is saving&#8230;</string>
+    <string name="status_obdoutput_done">finished</string>
+    <string name="status_watch_done">finished</string>
+    <string name="status_phone_done">finished</string>
 </resources>
