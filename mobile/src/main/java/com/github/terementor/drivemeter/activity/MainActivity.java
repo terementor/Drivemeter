@@ -68,6 +68,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Deque;
@@ -119,6 +120,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static long gyrocounter = 0;
     private static long acccounter = 0;
     private static long magcounter = 0;
+    private static long wgyrocounter = 0;
+    private static long wacccounter = 0;
+    private static long wmagcounter = 0;
     private static ContentValues metadata = new ContentValues();
 
     static {
@@ -306,12 +310,14 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private final Runnable mQueueCommands = new Runnable() {
         public void run() {
             if (service != null && service.isRunning() && service.queueEmpty()) {
+                long t0 = System.nanoTime();
                 queueCommands();
+                long t2 = System.nanoTime();
+                Log.d(TAG, "queueCommands() took " + ((t2 - t0) / 1_000_000) + "ms");
 
                 double lat = 0;
                 double lon = 0;
                 double alt = 0;
-                final int posLen = 7;
                 if (mGpsIsStarted && mLastLocation != null && outputsensors2) {
                     lat = mLastLocation.getLatitude();
                     lon = mLastLocation.getLongitude();
@@ -342,17 +348,19 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     Map<String, String> temp = new HashMap<String, String>();
                     temp.putAll(commandResult);
 
-                    //Write the current reading to DB
+                    //Write the current reading to deques
                     if (outputsensors2) {
                         Log.d(TAG, "OBD Hashmap" + temp.toString());
                         ContentValues obddata = new ContentValues();
-                        obddata.put("speed", temp.get("SPEED"));
-                        obddata.put("rpm", temp.get("ENGINE_RPM"));
+                        obddata.put("speed", Integer.parseInt(temp.get("SPEED").replaceAll("[\\D]", "")));
+                        obddata.put("rpm", Integer.parseInt(temp.get("ENGINE_RPM").replaceAll("[\\D]", "")));
                         obddata.put("time", temp.get("time"));
                         obddeque.addLast(obddata);
                     }
                 }
                 commandResult.clear();
+                long t1 = System.nanoTime();
+                Log.d(TAG, "mQueueCommands took " + ((t1 - t0) / 1_000_000) + "ms");
             }
             // run again in period defined in preferences
             new Handler().postDelayed(mQueueCommands, ConfigActivity.getObdUpdatePeriod(prefs));
@@ -604,14 +612,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
                 "ObdReader");
-
-
-        //WearCode
-        //BusProvider.getInstance().register(this);
-        //List<com.github.terementor.drivemeter.data.Sensor> wearsensors = RemoteSensorManager.getInstance(this).getSensors();
-        //Log.d(TAG, "Wear" + "");
-        //remoteSensorManager.startMeasurement();
-
 
         // get Bluetooth device
         final BluetoothAdapter btAdapter = BluetoothAdapter
@@ -896,10 +896,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
                     int zaehler = 0;
 
-                    //Start Handshake with Watch
-                    //remoteSensorManager.sendTime();
-                    //Log.d(TAG, "WatchTime " + WatchTime);
-
                     //Write Sensordata to csv or sql output
                     while (outputsensors) {
                         if (outputsensors2) {
@@ -1073,13 +1069,16 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         sensorManager.unregisterListener(magListener, magSensor);
 
         while (true) {
-            if (gyrodeque.isEmpty() && rotdeque.isEmpty() && accdeque.isEmpty() && magdeque.isEmpty() && dataDeques.WearaccdequeisEmpty() && dataDeques.WeargyrodequeisEmpty() && dataDeques.WearmagdequeisEmpty() && dataDeques.WearrotdequeisEmpty()) {
+            if (gyrodeque.isEmpty() && rotdeque.isEmpty() && accdeque.isEmpty() && magdeque.isEmpty() && dataDeques.WearaccdequeisEmpty() && dataDeques.WeargyrodequeisEmpty() && dataDeques.WearmagdequeisEmpty() && dataDeques.WearrotdequeisEmpty() && wacccounter !=0 && wgyrocounter !=0 && wacccounter !=0) {
                 setOutputsensorsfalse();
 
                 //write Counters ins DB
                 metadata.put("CountGyroskop", gyrocounter);
                 metadata.put("CountAccelerometer", acccounter);
                 metadata.put("CountMagnetic", magcounter);
+                metadata.put("CountWearAccelerometer", wacccounter);
+                metadata.put("CountWearMagnetic", wmagcounter);
+                metadata.put("CountWearGyroskp", wgyrocounter);
                 if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("SQLite3") && sensorCSVWriter.mydatabase != null) {
                     sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
                 }
@@ -1098,6 +1097,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 gyrocounter = 0;
                 acccounter = 0;
                 magcounter = 0;
+                wgyrocounter = 0;
+                wacccounter = 0;
+                wmagcounter = 0;
                 alreadyExecuted = false;
 
                 Log.d(TAG, "All data is written");
@@ -1407,6 +1409,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         } else {
             Log.e(TAG, "Cant write data to CSV");
         }
+    }
+
+    public static void setWearCounter(ArrayList<Integer> list) {
+        wacccounter = list.get(0);
+        wmagcounter = list.get(1);
+        wgyrocounter = list.get(2);
     }
 
     /**

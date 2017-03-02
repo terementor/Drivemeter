@@ -79,7 +79,7 @@ public class SensorReceiverService extends WearableListenerService {
                 String path = uri.getPath();
                 //Log.d(TAG, "Path" + path);
 
-                //Die Methode muss schneller frei werden
+                //Die Methode muss schnell frei werden
                 if (path.startsWith("/sensors/")) {
                     long t0 = System.nanoTime();
                     unpackSensorData(
@@ -93,6 +93,11 @@ public class SensorReceiverService extends WearableListenerService {
                 if (path.startsWith("/Ready/")) {
                     MainActivity.setOutputsensorstrue();
                     Log.d(TAG, "Received message: Ready");
+                }
+                if (path.startsWith("/Counter")) {
+                    DataMap countermap = DataMapItem.fromDataItem(dataItem).getDataMap();
+                    MainActivity.setWearCounter(countermap.getIntegerArrayList(DataMapKeys.COUNTER));
+                    Log.d(TAG, "Received message: Counter");
                 }
             }
         }
@@ -111,7 +116,8 @@ public class SensorReceiverService extends WearableListenerService {
         float[] valuesxarray = dataMap.getFloatArray(DataMapKeys.VALUESX);
         float[] valuesyarray = dataMap.getFloatArray(DataMapKeys.VALUESY);
         float[] valueszarray = dataMap.getFloatArray(DataMapKeys.VALUESZ);
-
+        ArrayList<Integer> counterarray = dataMap.getIntegerArrayList(DataMapKeys.COUNTER);
+        Log.d(TAG, "ArrayList " + counterarray);
 
 
         for (int i = 0; i < timearray.length && i < valuesxarray.length; ++i) {

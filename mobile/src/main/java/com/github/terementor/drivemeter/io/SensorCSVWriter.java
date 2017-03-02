@@ -38,7 +38,7 @@ public class SensorCSVWriter {
 
             mydatabase = SQLiteDatabase.openOrCreateDatabase(sdCard.getAbsolutePath() + File.separator + dirname + File.separator + filename + ".db", null, null);
             Log.d(TAG, "DB" + sdCard.getAbsolutePath() + File.separator + dirname + File.separator + filename +  ".db");
-            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS MetaData (PhoneTime STRING, WearTime BIGINT, Driver INT, Situation INT, CountAccelerometer BIGINT, CountGyroskop BIGINT, CountMagnetic BIGINT," +
+            mydatabase.execSQL("CREATE TABLE IF NOT EXISTS MetaData (PhoneTime STRING, WearTime STRING, Driver INT, Situation INT, CountAccelerometer BIGINT, CountGyroskop BIGINT, CountMagnetic BIGINT," +
                     " CountWearAccelerometer BIGINT, CountWearGyroskp BIGINT, CountWearMagnetic BIGINT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Gyroskop (time BIGINT, systime BIGINT, x FLOAT, y FLOAT, z FLOAT);");
             mydatabase.execSQL("CREATE TABLE IF NOT EXISTS Accelerometer (time BIGINT, systime BIGINT, x FLOAT, y FLOAT, z FLOAT);");

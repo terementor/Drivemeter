@@ -13,6 +13,7 @@ import android.location.LocationProvider;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import java.util.concurrent.Executors;
@@ -46,6 +47,9 @@ public class SensorService extends Service implements SensorEventListener {
     private final static int SENS_HEARTRATE = Sensor.TYPE_HEART_RATE; //21
 
     private static boolean sendingstatus = false;
+    private static int acccounter = 0;
+    private static int gyrocounter = 0;
+    private static int magcounter = 0;
 
     SensorManager mSensorManager;
     private Sensor mHeartrateSensor;
@@ -67,7 +71,6 @@ public class SensorService extends Service implements SensorEventListener {
         startForeground(1, builder.build());
 
         startMeasurement();
-        Calendar c = Calendar.getInstance();
     }
 
     @Override
@@ -109,6 +112,9 @@ public class SensorService extends Service implements SensorEventListener {
 
         // Register the listener
         if (mSensorManager != null) {
+            acccounter = 0;
+            gyrocounter = 0;
+            magcounter = 0;
             if (accelerometerSensor != null) {
                 //The default data delay is suitable for monitoring typical screen orientation changes and uses a delay of 200,000 microseconds.
                 // You can specify other data delays, such as SENSOR_DELAY_GAME (20,000 microsecond delay), SENSOR_DELAY_UI (60,000 microsecond delay), or SENSOR_DELAY_FASTEST (0 microsecond delay)
@@ -291,6 +297,14 @@ public class SensorService extends Service implements SensorEventListener {
         Log.d(TAG, "delaytrue cause of stop message");
     }
 
+    public static ArrayList<Integer> getCounter(){
+        ArrayList<Integer> list = new ArrayList<Integer>();
+        list.add(acccounter);
+        list.add(magcounter);
+        list.add(gyrocounter);
+        return list;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         //only startsending, when everything is initalized and message with startsending was send to phone
@@ -300,13 +314,18 @@ public class SensorService extends Service implements SensorEventListener {
         }
 
         //client.sendSensorData(event.sensor.getType(), event.accuracy, event.timestamp, event.values, event.sensor.getMinDelay(), event.sensor.getName());
-        if (event.sensor.getType() == 1 || event.sensor.getType() == 2 || event.sensor.getType() == 4) {
-        //if (event.sensor.getType() == 1 ) {
+        //if (event.sensor.getType() == 1 || event.sensor.getType() == 2 || event.sensor.getType() == 4) {
+        if (event.sensor.getType() == 1 ) {
             client.sendSensorData(event);
-            if (event.sensor.getType() == 1 ) {
-                //Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
-            }
-            //Log.d(TAG, "Type" + event.sensor.getType() + " "+ "Time "+ Long.toString(event.timestamp) + " Values "+ event.values[0] + " " + event.values[1]+ " "+ event.values[2]);
+            acccounter++;
+        }
+        if (event.sensor.getType() == 2 ) {
+            client.sendSensorData(event);
+            magcounter++;
+        }
+        if (event.sensor.getType() == 4 ) {
+            client.sendSensorData(event);
+            gyrocounter++;
         }
     }
 

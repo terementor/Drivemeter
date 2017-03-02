@@ -13,6 +13,7 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
@@ -72,6 +73,8 @@ public class MessageReceiverService extends WearableListenerService {
 
         if (messageEvent.getPath().equals(ClientPaths.STOP_MEASUREMENT)) {
             SensorService.stopsending();
+            deviceClient.sendCounter(SensorService.getCounter());
+            Log.d(TAG, "Stop message counter: "+ SensorService.getCounter());
             stopService(new Intent(this, SensorService.class));
             deviceClient.clearSensorDeques();
         }

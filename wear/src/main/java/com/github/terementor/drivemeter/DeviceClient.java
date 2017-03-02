@@ -5,11 +5,7 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.util.Log;
 import android.util.SparseLongArray;
-import android.location.GpsStatus;
 import android.location.Location;
-//import android.location.LocationListener;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 
 import com.github.terementor.drivemeter.shared.DataMapKeys;
 import com.google.android.gms.common.ConnectionResult;
@@ -19,17 +15,7 @@ import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import android.os.Bundle;
 
 import java.text.DateFormat;
@@ -61,8 +47,7 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
     private ExecutorService executorService;
     private int filterId;
     private SparseLongArray lastSensorData;
-    private long time2 = 0;
-    private Location mLastLocation;
+
 
 
     private DeviceClient(Context context) {
@@ -110,6 +95,26 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
                         @Override
                         public void onResult(DataApi.DataItemResult dataItemResult) {
                             Log.d(TAG, "Sending ready signal: " + dataItemResult.getStatus().isSuccess());
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public void sendCounter(final ArrayList<Integer> counter) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+
+                PutDataMapRequest dataMap = PutDataMapRequest.create("/Counter");
+                dataMap.getDataMap().putIntegerArrayList(DataMapKeys.COUNTER, counter);
+                PutDataRequest putDataRequest = dataMap.asPutDataRequest();
+                if (validateConnection()) {
+                    Wearable.DataApi.putDataItem(googleApiClient, putDataRequest).setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+                        @Override
+                        public void onResult(DataApi.DataItemResult dataItemResult) {
+                            Log.d(TAG, "Sending stop Signal" + counter);
                         }
                     });
                 }
@@ -217,6 +222,7 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
                         dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESY, valuesyarray);
                         dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESZ, valueszarray);
 
+                        Log.d(TAG, "Counterlist " + counterlist);
                         PutDataRequest putDataRequest = dataMap.asPutDataRequest();
 
                         {
@@ -258,28 +264,6 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnected(Bundle bundle) {
-        LocationRequest locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(1);
-                //.setFastestInterval(5)
-
-        /*LocationServices.FusedLocationApi
-                .requestLocationUpdates(googleApiClient, locationRequest, this)
-                .setResultCallback(new ResultCallback<Status>() {
-
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.getStatus().isSuccess()) {
-                                Log.d(TAG, "Successfully requested location updates");
-                        } else {
-                            Log.e(TAG, "requesting loc up,"
-                                            + "statuscode:"
-                                            + status.getStatusCode()
-                                            + ",message:"
-                                            + status.getStatusMessage());
-                        }
-                    }
-                });*/
     }
 
 
@@ -293,21 +277,6 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed");
-    }
-
-    public void onLocationChanged(Location location) {
-
-        mLastLocation = location;
-        String prov =  location.getProvider();
-        double lat = mLastLocation.getLatitude();
-        double lon = mLastLocation.getLongitude();
-        double alt = mLastLocation.getAltitude();
-        double nanos = mLastLocation.getElapsedRealtimeNanos();
-        Log.d(TAG, "GPS Location: "+ lat + " " + lon + " " + alt + " "+ prov);
-    }
-
-    public void stopGPS (){
-        googleApiClient.disconnect();
     }
 
 }
