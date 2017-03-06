@@ -64,16 +64,16 @@ public class RemoteSensorManager {
         return result.isSuccess();
     }
 
-    public void filterBySensorId(final int sensorId) {
+    /*public void filterBySensorId(final int sensorId) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
                 filterBySensorIdInBackground(sensorId);
             }
         });
-    }
+    }*/
 
-    private void filterBySensorIdInBackground(final int sensorId) {
+    /*private void filterBySensorIdInBackground(final int sensorId) {
         Log.d(TAG, "filterBySensorId(" + sensorId + ")");
 
         if (validateConnection()) {
@@ -90,7 +90,7 @@ public class RemoteSensorManager {
                 }
             });
         }
-    }
+    }*/
 
     public void startMeasurement(final String speed) {
         executorService.submit(new Runnable() {

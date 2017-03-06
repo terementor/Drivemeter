@@ -177,20 +177,24 @@ public class ObdGatewayService extends AbstractGatewayService {
         while (!Thread.currentThread().isInterrupted()) {
             ObdCommandJob job = null;
             try {
+
                 job = jobsQueue.take();
 
                 // log job
-                Log.d(TAG, "Taking job[" + job.getId() + "] from queue..");
+                Log.d(TAG, "Taking job[" + job.getId() + "] " + job.getCommand() + " from queue..");
 
                 if (job.getState().equals(ObdCommandJobState.NEW)) {
-                    Log.d(TAG, "Job state is NEW. Run it..");
+                    Log.d(TAG, "Job state is NEW. Run it.. jobcommand: " + job.getCommand());
                     job.setState(ObdCommandJobState.RUNNING);
+                    long t0 = System.nanoTime();
                     if (sock.isConnected()) {
                         job.getCommand().run(sock.getInputStream(), sock.getOutputStream());
                     } else {
                         job.setState(ObdCommandJobState.EXECUTION_ERROR);
                         Log.e(TAG, "Can't run command on a closed socket.");
                     }
+                    long t2 = System.nanoTime();
+                    Log.d(TAG, "executeQueue() took " + ((t2 - t0) / 1_000_000) + "ms");
                 } else
                     // log not new job
                     Log.e(TAG,
@@ -212,10 +216,11 @@ public class ObdGatewayService extends AbstractGatewayService {
                 Log.e(TAG, "IO error. -> " + io.getMessage());
             } catch (Exception e) {
                 if (job != null) {
-                    job.setState(ObdCommandJobState.EXECUTION_ERROR);
+                    //job.setState(ObdCommandJobState.EXECUTION_ERROR);
                 }
                 Log.e(TAG, "Failed to run command. -> " + e.getMessage());
             }
+
 
             if (job != null) {
                 final ObdCommandJob job2 = job;

@@ -15,8 +15,7 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
+
 
 public class SensorReceiverService extends WearableListenerService {
     private static final String TAG = "SensorDashboard/SensorReceiverService";
@@ -41,10 +40,6 @@ public class SensorReceiverService extends WearableListenerService {
     private final static int SENS_STEP_COUNTER = 19;
     private final static int SENS_GEOMAGNETIC = 20;
     private final static int SENS_HEARTRATE = 21;
-    private static int k = 0;
-    private static long t0 = 0;
-    private static int h = 0;
-    private Deque<ContentValues> tmpdeque = new ConcurrentLinkedDeque<>();
     private RemoteSensorManager sensorManager;
 
     @Override
@@ -87,7 +82,7 @@ public class SensorReceiverService extends WearableListenerService {
                             DataMapItem.fromDataItem(dataItem).getDataMap()
                     );
                     long t1 = System.nanoTime();
-                    Log.d(TAG, "UnpackSensorData took " + ((t1 - t0) / 1_000_000) + "ms");
+                    Log.d(TAG, "UnpackSensorData took " + ((t1 - t0) / 1_000_000) + "ms" + DataMapItem.fromDataItem(dataItem).getDataMap().size());
                 }
 
                 if (path.startsWith("/Ready/")) {
@@ -118,21 +113,12 @@ public class SensorReceiverService extends WearableListenerService {
         float[] valueszarray = dataMap.getFloatArray(DataMapKeys.VALUESZ);
         ArrayList<Integer> counterarray = dataMap.getIntegerArrayList(DataMapKeys.COUNTER);
         Log.d(TAG, "ArrayList " + counterarray);
+        Log.d(TAG, "Length " + typelist.size());
 
+        for (int i = 0; i < timearray.length && i < typelist.size(); i++) {
 
-        for (int i = 0; i < timearray.length && i < valuesxarray.length; ++i) {
+            //Log.d(TAG, "SensorEvent Nummer: " +" timestamp: " + Long.toString(timearray[i]));
 
-            //Log.d(TAG, "SensorEvent Nummer: " + counterlist.get(i) + " timestamp: " + Long.toString(timearray[i]));
-            h++;
-            if (k == 0) {
-                t0 = System.nanoTime();
-            }
-            if (k == 100000) {
-                long t1 = System.nanoTime();
-                Log.d(TAG, "TimeFor100000 " + ((t1 - t0) / 1_000_000) + "ms" + "Anzahl " + Integer.toString(h));
-                t0 = 0;
-                h = 0;
-            }
             //Log.d(TAG, "Sensortyp: " + typelist.toString());
 
             if (MainActivity.getoutputsensors2()) {
@@ -170,6 +156,5 @@ public class SensorReceiverService extends WearableListenerService {
                 }
             }
         }
-        //sensorManager.addSensorData(sensorType, accuracy, timestamp, values);
     }
 }

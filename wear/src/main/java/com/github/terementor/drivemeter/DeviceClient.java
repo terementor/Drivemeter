@@ -38,7 +38,6 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
     public static DeviceClient instance;
     private Deque<ContentValues> sensordeque = new ConcurrentLinkedDeque<ContentValues>();
     private Deque<ContentValues> sensordeque2 = new ConcurrentLinkedDeque<ContentValues>();
-    private Deque<Long> testdeque = new ConcurrentLinkedDeque<Long>();
     private Boolean changedeque = true;
     private AtomicInteger i = new AtomicInteger(0);
     private int j = 0;
@@ -47,6 +46,7 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
     private ExecutorService executorService;
     private int filterId;
     private SparseLongArray lastSensorData;
+    private static boolean sendremaining = false;
 
 
 
@@ -206,35 +206,34 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
                     i.getAndAdd(1);
                     l++;
                     k++;
+                }
+                if (deque.isEmpty()) { //k == DataMapKeys.BATCHSIZE
+                    Log.d(TAG, "StartSending " + i.toString() + " WhileLoopPosition " + Integer.toString(l));
 
-                    if (k == DataMapKeys.BATCHSIZE) {
-                        Log.d(TAG, "StartSending " + i.toString() + " WhileLoopPosition " + Integer.toString(l));
+                    int sensorType = 1;
+                    PutDataMapRequest dataMap = PutDataMapRequest.create("/sensors/" + sensorType);
 
-                        int sensorType = 1;
-                        PutDataMapRequest dataMap = PutDataMapRequest.create("/sensors/" + sensorType);
+                    dataMap.getDataMap().putIntegerArrayList(DataMapKeys.TYPE, typelist);
+                    dataMap.getDataMap().putIntegerArrayList(DataMapKeys.ACCURACY, accuracylist);
+                    dataMap.getDataMap().putIntegerArrayList(DataMapKeys.COUNTER, counterlist);
+                    dataMap.getDataMap().putLongArray(DataMapKeys.TIMESTAMP, timearray);
+                    dataMap.getDataMap().putLongArray(DataMapKeys.SYSTIME, systimearray);
+                    dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESX, valuesxarray);
+                    dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESY, valuesyarray);
+                    dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESZ, valueszarray);
 
-                        dataMap.getDataMap().putIntegerArrayList(DataMapKeys.TYPE, typelist);
-                        dataMap.getDataMap().putIntegerArrayList(DataMapKeys.ACCURACY, accuracylist);
-                        dataMap.getDataMap().putIntegerArrayList(DataMapKeys.COUNTER, counterlist);
-                        dataMap.getDataMap().putLongArray(DataMapKeys.TIMESTAMP, timearray);
-                        dataMap.getDataMap().putLongArray(DataMapKeys.SYSTIME, systimearray);
-                        dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESX, valuesxarray);
-                        dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESY, valuesyarray);
-                        dataMap.getDataMap().putFloatArray(DataMapKeys.VALUESZ, valueszarray);
+                    Log.d(TAG, "Counterlist " + counterlist);
+                    PutDataRequest putDataRequest = dataMap.asPutDataRequest();
 
-                        Log.d(TAG, "Counterlist " + counterlist);
-                        PutDataRequest putDataRequest = dataMap.asPutDataRequest();
-
-                        {
-                            long t0 = System.nanoTime();
-                            send(putDataRequest);
-                            long t1 = System.nanoTime();
-                            Log.d(TAG, "Sending Batches took " + ((t1 - t0) / 1_000_000) + "ms");
-                        }
-
-                        //Log.d(TAG, "Fertig mit Senden der Batches");
-                        k = 0;
+                    {
+                        long t0 = System.nanoTime();
+                        send(putDataRequest);
+                        long t1 = System.nanoTime();
+                        Log.d(TAG, "Sending Batches took " + ((t1 - t0) / 1_000_000) + "ms");
                     }
+
+                    //Log.d(TAG, "Fertig mit Senden der Batches");
+                    k = 0;
                 }
             }
         });
@@ -277,6 +276,19 @@ public class DeviceClient implements  GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed");
+    }
+
+    public void sendRemaining() {
+        if (!sensordeque.isEmpty()){
+            sendSensorDataInBackground(new ArrayDeque<ContentValues>(sensordeque));
+            sensordeque.clear();
+            Log.d(TAG, "Send Remaining sensordeque " + sensordeque.size());
+        } else if (!sensordeque2.isEmpty()) {
+            sendSensorDataInBackground(new ArrayDeque<ContentValues>(sensordeque2));
+            sensordeque2.clear();
+            Log.d(TAG, "Send Remaining sensordeque2 "+sensordeque2.size());
+        }
+
     }
 
 }

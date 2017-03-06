@@ -73,6 +73,7 @@ public class MessageReceiverService extends WearableListenerService {
 
         if (messageEvent.getPath().equals(ClientPaths.STOP_MEASUREMENT)) {
             SensorService.stopsending();
+            deviceClient.sendRemaining();
             deviceClient.sendCounter(SensorService.getCounter());
             Log.d(TAG, "Stop message counter: "+ SensorService.getCounter());
             stopService(new Intent(this, SensorService.class));

@@ -352,8 +352,47 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     if (outputsensors2) {
                         Log.d(TAG, "OBD Hashmap" + temp.toString());
                         ContentValues obddata = new ContentValues();
-                        obddata.put("speed", Integer.parseInt(temp.get("SPEED").replaceAll("[\\D]", "")));
-                        obddata.put("rpm", Integer.parseInt(temp.get("ENGINE_RPM").replaceAll("[\\D]", "")));
+                        String speed = temp.get("SPEED");
+                        String rpm = temp.get("ENGINE_RPM");
+                        if (speed != null){
+                            Log.d(TAG, "speed " + speed);
+                            if (speed.contains(":")) {
+                                speed = speed.split(":")[0];
+                                speed.substring(4);
+                                Log.d(TAG, "Substringspeed " + speed + " " + Integer.parseInt(speed, 16));
+                                obddata.put("speed", Integer.parseInt(speed, 16));
+                            } else {
+                                try {
+                                    obddata.put("speed", Integer.parseInt(speed.replaceAll("[\\D]", "")));
+                                    Log.d(TAG, "normalspeed " + speed + " " + Integer.parseInt(speed.replaceAll("[\\D]", "")));
+                                } catch (NumberFormatException e) { //Catch for no digit in the result. For example CAN Error
+                                    obddata.put("speed", speed);
+                                }
+                            }
+
+
+                        } else {
+                            Log.d(TAG, "OBDSpeed is null");
+                        }
+                        if (rpm != null){
+                            Log.d(TAG, "speed " + speed);
+                            if (rpm.contains(":")) {
+                                rpm = rpm.split(":")[0];
+                                rpm = rpm.substring(4);
+                                Log.d(TAG, "Substringrpm " + rpm + " " + rpm);
+                                //obddata.put("speed", Integer.parseInt(speed, 16));
+                            } else  {
+                                try  {
+                                    obddata.put("rpm", Integer.parseInt(rpm.replaceAll("[\\D]", "")));
+                                    Log.d(TAG, "normalrpm " + rpm + " " + Integer.parseInt(rpm.replaceAll("[\\D]", "")));
+                                } catch (NumberFormatException e) {
+                                    obddata.put("rpm", rpm);
+                                }
+                            }
+                        } else {
+                            Log.d(TAG, "OBDrpm is null");
+                        }
+
                         obddata.put("time", temp.get("time"));
                         obddeque.addLast(obddata);
                     }
@@ -957,8 +996,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                 if (!magdeque.isEmpty()) {
                                     ContentValues magdata = magdeque.pollFirst();
                                     sensorCSVWriter.mydatabase.insert("Magnetic", null, magdata);
-                                    Log.d(TAG, "Smartphonesensors are saving " + zaehler);
-                                    zaehler++;
                                 }
                                 //Phone GPS
                                 if (!gpsdeque.isEmpty()) {
@@ -1005,9 +1042,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                                 }
                                 if (!magdeque.isEmpty()) {
                                     writeSensorData(magdeque.pollFirst(), magCSV);
-                                    ContentValues magdata = magdeque.pollFirst();
-                                    Log.d(TAG, "Smartphonesensors are saving " + zaehler);
-                                    zaehler++;
                                 }
                                 //Phone GPS
                                 String[] gpstmp = new String[5];
@@ -1070,6 +1104,11 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         while (true) {
             if (gyrodeque.isEmpty() && rotdeque.isEmpty() && accdeque.isEmpty() && magdeque.isEmpty() && dataDeques.WearaccdequeisEmpty() && dataDeques.WeargyrodequeisEmpty() && dataDeques.WearmagdequeisEmpty() && dataDeques.WearrotdequeisEmpty() && wacccounter !=0 && wgyrocounter !=0 && wacccounter !=0) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException re) {
+                    Log.e(TAG, re.toString());
+                }
                 setOutputsensorsfalse();
 
                 //write Counters ins DB
@@ -1083,7 +1122,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     sensorCSVWriter.mydatabase.insert("MetaData", null, metadata);
                 }
                 if (prefs.getString(ConfigActivity.LOGGING_TYPES_KEY, "CSV").equals("CSV") && metaCSV != null) {
-                    String[] tmp = new String[7];
+                    String[] tmp = new String[10];
                     tmp[0] = metadata.getAsString("PhoneTime");
                     tmp[1] = "0";
                     tmp[2] = metadata.getAsString("Driver");
@@ -1091,6 +1130,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                     tmp[4] = Long.toString(acccounter);
                     tmp[5] = Long.toString(gyrocounter);
                     tmp[6] = Long.toString(magcounter);
+                    tmp[7] = Long.toString(wacccounter);
+                    tmp[8] = Long.toString(wgyrocounter);
+                    tmp[9] = Long.toString(wmagcounter);
                     metaCSV.writestringLineCSV(tmp);
                     Log.d(TAG, "metaCSV written " + tmp);
                 }

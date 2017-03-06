@@ -266,14 +266,14 @@ public class SensorService extends Service implements SensorEventListener {
             public void run() {
                 client.sendreadyflag(); //Start recording of Phone sensors
             }
-        }, 3000000, TimeUnit.MICROSECONDS );
+        }, 2000000, TimeUnit.MICROSECONDS );
 
         pool.schedule(new Runnable() {
             @Override
             public void run() {
                 SensorService.startsending(); //Start recording of Wear sensors
             }
-        }, 3230000, TimeUnit.MICROSECONDS );
+        }, 2230000, TimeUnit.MICROSECONDS );
         pool.shutdown();
 
     }
