@@ -119,6 +119,15 @@ public class SensorService extends Service implements SensorEventListener {
                 //The default data delay is suitable for monitoring typical screen orientation changes and uses a delay of 200,000 microseconds.
                 // You can specify other data delays, such as SENSOR_DELAY_GAME (20,000 microsecond delay), SENSOR_DELAY_UI (60,000 microsecond delay), or SENSOR_DELAY_FASTEST (0 microsecond delay)
                 mSensorManager.registerListener(this, accelerometerSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
+                String[] details = new String[7];
+                details[0] = accelerometerSensor.getName();
+                details[1] = accelerometerSensor.getVendor();
+                details[2] = Integer.toString(accelerometerSensor.getType());
+                details[3] = Float.toString(accelerometerSensor.getResolution());
+                details[4] = Integer.toString(accelerometerSensor.getMinDelay());
+                details[5] = Integer.toString(accelerometerSensor.getMaxDelay());
+                details[6] = Float.toString(accelerometerSensor.getMaximumRange());
+                Log.d(TAG, "Accelerometer: " + details[0] + " " + details[1]+ " " + details[2]+ " " + details[3]+ " " + details[4]+ " " + details[5]+ " " + details[6]);
                 Log.w(TAG, "AccSensor found with speed: " +MessageReceiverService.speed);
             } else {
                 Log.w(TAG, "No Accelerometer found");
@@ -150,6 +159,16 @@ public class SensorService extends Service implements SensorEventListener {
 
             if (gyroscopeSensor != null) {
                 mSensorManager.registerListener(this, gyroscopeSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
+                String[] details = new String[7];
+                details[0] = gyroscopeSensor.getName();
+                details[1] = gyroscopeSensor.getVendor();
+                details[2] = Integer.toString(gyroscopeSensor.getType());
+                details[3] = Float.toString(gyroscopeSensor.getResolution());
+                details[4] = Integer.toString(gyroscopeSensor.getMinDelay());
+                details[5] = Integer.toString(gyroscopeSensor.getMaxDelay());
+                details[6] = Float.toString(gyroscopeSensor.getMaximumRange());
+                Log.d(TAG, "Gyroskop: " + details[0] + " " + details[1]+ " " + details[2]+ " " + details[3]+ " " + details[4]+ " " + details[5]+ " " + details[6]);
+            } else {
                 Log.w(TAG, "No Gyroscope Sensor found");
             }
 
@@ -206,6 +225,15 @@ public class SensorService extends Service implements SensorEventListener {
 
             if (magneticFieldSensor != null) {
                 mSensorManager.registerListener(this, magneticFieldSensor, MessageReceiverService.speed); //SensorManager.SENSOR_DELAY_GAME
+                String[] details = new String[7];
+                details[0] = magneticFieldSensor.getName();
+                details[1] = magneticFieldSensor.getVendor();
+                details[2] = Integer.toString(magneticFieldSensor.getType());
+                details[3] = Float.toString(magneticFieldSensor.getResolution());
+                details[4] = Integer.toString(magneticFieldSensor.getMinDelay());
+                details[5] = Integer.toString(magneticFieldSensor.getMaxDelay());
+                details[6] = Float.toString(magneticFieldSensor.getMaximumRange());
+                Log.d(TAG, "Magnetometer: " + details[0] + " " + details[1]+ " " + details[2]+ " " + details[3]+ " " + details[4]+ " " + details[5]+ " " + details[6]);
             } else {
                 Log.d(TAG, "No Magnetic Field Sensor found");
             }
@@ -259,6 +287,8 @@ public class SensorService extends Service implements SensorEventListener {
             }
         }
         //Wait with sending data to phone, to have enough time to initialize the phone
+
+
 
         ScheduledExecutorService pool = Executors.newScheduledThreadPool(2);
         pool.schedule(new Runnable() {

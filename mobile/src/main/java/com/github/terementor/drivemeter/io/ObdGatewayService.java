@@ -115,6 +115,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         Log.d(TAG, "Starting OBD connection..");
         isRunning = true;
         try {
+            Log.d(TAG, "Bluetoothdevice.." + dev.toString());
             sock = BluetoothManager.connect(dev);
         } catch (Exception e2) {
             Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);

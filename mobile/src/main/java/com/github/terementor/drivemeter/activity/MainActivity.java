@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -42,6 +44,9 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import 	java.io.InputStreamReader;
 
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
@@ -52,6 +57,7 @@ import com.github.terementor.drivemeter.R;
 import com.github.terementor.drivemeter.config.ObdConfig;
 import com.github.terementor.drivemeter.data.DataDeques;
 import com.github.terementor.drivemeter.io.AbstractGatewayService;
+import com.github.terementor.drivemeter.io.BluetoothManager;
 import com.github.terementor.drivemeter.io.LogCSVWriter;
 import com.github.terementor.drivemeter.io.MockObdGatewayService;
 import com.github.terementor.drivemeter.io.ObdCommandJob;
@@ -160,9 +166,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private final SensorEventListener gyroListener = new SensorEventListener() {
 
         public void onSensorChanged(SensorEvent event) {
-            float x = event.values[0];
+            /*float x = event.values[0];
             String dir = "";
-            /*if (x >= 337.5 || x < 22.5) {
+            if (x >= 337.5 || x < 22.5) {
                 dir = "N";
             } else if (x >= 22.5 && x < 67.5) {
                 dir = "NE";
@@ -777,6 +783,36 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private void startsensors() {
         Log.d(TAG, "startsensors()");
 
+        /*BluetoothDevice device = null;
+        BluetoothSocket sock = null;
+        final BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+        device = btAdapter.getRemoteDevice("00:02:78:0A:90:1F");
+
+        try {
+            Log.d(TAG, "Bluetoothdevice.." + device.toString());
+            sock = BluetoothManager.connect(device);
+        } catch (Exception e2) {
+            Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);
+        }
+        if (sock.isConnected()) {
+            // After successful connect you can open InputStream
+            try{
+                InputStream in = sock.getInputStream();
+                InputStreamReader isr = new InputStreamReader(in);
+                BufferedReader br = new BufferedReader(isr);
+
+                while (true) {
+                    String nmeaMessage = br.readLine();
+                    Log.d("NMEA", nmeaMessage);
+                    // parse NMEA messages
+            }
+            } catch (Exception e3) {
+                Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e3);
+            }
+
+// !!!CLOSE Streams!!!
+        }
+*/
         outputsensors = true;
         phonetextviewupdate = false;
         watchtextviewupdate = false;
@@ -1427,13 +1463,14 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
     public void writeSensorDetails(Sensor sensor, LogCSVWriter csvfile) {
         if (sensor != null && csvfile != null) {
-            String[] details = new String[6];
+            String[] details = new String[7];
             details[0] = sensor.getName();
             details[1] = sensor.getVendor();
             details[2] = Integer.toString(sensor.getType());
             details[3] = Float.toString(sensor.getResolution());
             details[4] = Integer.toString(sensor.getMinDelay());
             details[5] = Integer.toString(sensor.getMaxDelay());
+            details[6] = Float.toString(sensor.getMaximumRange());
             csvfile.writestringLineCSV(details);
         } else {
             Log.e(TAG, "Cant write details to CSV");

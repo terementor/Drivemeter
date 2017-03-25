@@ -28,7 +28,7 @@ public class LogCSVWriter {
     private static final String[] GPS_COlUMNS = {"time","systemtime", "lat", "lon", "alt"};
     private static final String[] OBD_COLUMNS = {"time", "speed", "rpm"};
     private static final String[] META_COLUMNS = {"PhoneTime", "WearTime", "Driver", "Situation", "CountAccelerometer", "CountGyropskop", "CountMagnetic", "CountWearAccelerometer", "CountWearGyropskop", "CountWearMagnetic"};
-    private static final String[] DETAILS_COLUMNS = {"Name", "Vendor", "Type", "Resolution", "MinDelay", "MaxDelay"};
+    private static final String[] DETAILS_COLUMNS = {"Name", "Vendor", "Type", "Resolution", "MinDelay", "MaxDelay", "SesnorRange"};
     private static final String[] NAMES_COLUMNS_ONLY_READINGS = {
             "BAROMETRIC_PRESSURE", "ENGINE_COOLANT_TEMP", "FUEL_LEVEL", "ENGINE_LOAD", "AMBIENT_AIR_TEMP",
             "ENGINE_RPM", "INTAKE_MANIFOLD_PRESSURE", "MAF", "Term Fuel Trim Bank 1",
